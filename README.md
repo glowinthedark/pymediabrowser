@@ -17,5 +17,9 @@ _to serve a specific folder_
 python mediaserver.py /mymediafolder
 ```
 
+Once the media server is running open the following URL in your web browser:
+
+http://localhost:8088
+
 ## Usage (Python 3.x)
 To run under python 3 switch to the `python3` branch with `git checkout python3` and run the server with `python3 mediaserver.py`
