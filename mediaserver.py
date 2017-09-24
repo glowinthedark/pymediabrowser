@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-#  Split Pane v0.9.2
-
 #  Copyright (c) 2017 booleanbaby
-
 #  Released under the MIT license
 
 # - automatically find matching audio/video or PDF file for clicked file
