@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+	<head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+        <meta name="author" content="info@xhumanoid.com">
+        <title>Media Browser</title>
+        <link rel="stylesheet" href="/lib/css/split-pane.css"/>
+        <link rel="stylesheet" href="/lib/css/pretty-split-pane.css"/>
+        <script src="/lib/js/jquery.min.js"></script>
+        <script src="/lib/js/angular.min.js"></script>
+        <script src="/lib/js/split-pane.js"></script>
+        <script src="/lib/js/angular-split-pane.js"></script>
+        <link rel="apple-touch-icon" sizes="57x57" href="/lib/ico/apple-icon-57x57.png">
+        <link rel="apple-touch-icon" sizes="60x60" href="/lib/ico/apple-icon-60x60.png">
+        <link rel="apple-touch-icon" sizes="72x72" href="/lib/ico/apple-icon-72x72.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="/lib/ico/apple-icon-76x76.png">
+        <link rel="apple-touch-icon" sizes="114x114" href="/lib/ico/apple-icon-114x114.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="/lib/ico/apple-icon-120x120.png">
+        <link rel="apple-touch-icon" sizes="144x144" href="/lib/ico/apple-icon-144x144.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="/lib/ico/apple-icon-152x152.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="/lib/ico/apple-icon-180x180.png">
+        <link rel="icon" type="image/png" sizes="192x192"  href="/lib/ico/android-icon-192x192.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/lib/ico/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="96x96" href="/lib/ico/favicon-96x96.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/lib/ico/favicon-16x16.png">
+        <link rel="manifest" href="/lib/ico/manifest.json">
+        <meta name="msapplication-TileColor" content="#ffffff">
+        <meta name="msapplication-TileImage" content="/lib/ico/ms-icon-144x144.png">
+        <meta name="theme-color" content="#ffffff">
+
+        <style type="text/css">
+            html, body {
+                height: 100%;
+                min-height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            p {
+                padding: 0;
+                margin: 0;
+            }
+
+            #playbackSpeed {
+                max-width: 10%;
+                min-width: 50px;
+                float: right;
+            }
+
+            audio {
+                min-width: 90%;
+                max-width: 90%;
+                width: 90%;
+                display: block;
+                margin: 0;
+                float: left;
+            }
+
+            video {
+                height: 100%;
+                min-height: 100%;
+                display: block;
+                margin: 0 auto;
+                text-align: center
+                float: left;
+            }
+
+            iframe {
+                background-color: whitesmoke;
+            }
+
+            #docview {
+                border-style: none;
+                margin: 0;
+                padding: 0
+            }
+
+            a:link {
+                color: #808080;
+                text-decoration: none;
+            }
+
+            /* visited link */
+            a:visited {
+                color: #808080;
+                text-decoration: none;
+            }
+
+            /* mouse over link */
+            a:hover {
+                color: #ff7d12;
+            }
+
+            /* selected link */
+            a:active {
+                color: #ff7d12;
+            }
+
+            * {
+                font-family: "Droid Sans", sans-serif;
+                font-size: 12pt;
+                line-height: 160%;
+                padding: 0;
+                margin: 0;
+            }
+
+            li {
+                list-style: none;
+                padding: 0 .1em .1em .7em;
+                margin: 0;
+            }
+
+            .btn-back {
+                display: block;
+                margin: 0;
+                padding: 0 0 0 0px;
+                background-color: white;
+                font-size: 140%;
+                width: 100%;
+                cursor: pointer;
+                border-bottom: 1px solid #fafafa;
+            }
+
+            .split-pane .lk-no-ovrflw {
+                background-color: white;
+                overflow: hidden !important;
+            }
+
+            .pretty-split-pane-component-inner {
+                padding: 0;
+            }
+
+            /* select eye candy */
+            .rounded {
+                -webkit-border-radius: 20px;
+                -moz-border-radius: 20px;
+                border-radius: 20px;
+            }
+
+            select {
+                background: transparent;
+                font-size: 16px;
+                border: 0;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                appearance: none;
+            }
+
+        </style>
+        <script type="text/javascript">
+
+            var REGEX_TYPE_AUDIO = /\.(mp3|m4a|aac|flac|ape|wav|ogg|oga)$/i;
+            var REGEX_TYPE_VIDEO = /\.(mp4|m4v|avi|mov)/i;
+            var REGEX_TYPE_AUDIO_VIDEO = /(mp3|mp4|m4v|avi|mov|ogv|webm)$/i;
+            var REGEX_TYPE_CONTENT = /\.(html|htm|js|py|sh|xml|jpg|jpeg|png|tiff|txt|bat|doc|docx|xls|xlsx|css|json)$/i;
+            var REGEX_TYPE_PDF = /\.pdf$/i;
+
+            // special case for chineselearningonline only
+            var CLO_PDF_REGEX = /clo_(\d{3}).*pdf/i;
+
+            var HEIGHT_AUDIO = 32;
+            var HEIGHT_VIDEO = 500;
+
+            function findMatchingFileByExtension(path, extension_regex) {
+
+                var matcher = CLO_PDF_REGEX.exec(path);
+                if (matcher) {
+                    return "../Audio/ChineseLearnOnline_" + matcher[1] + ".mp3";
+                }
+
+                // remove extension
+                var base_path = path.substring(0, path.lastIndexOf('.'));
+
+                // find first media link matching current URL
+                var matched = $("[href*='" + base_path + "']");
+
+                var media_entries = matched.filter(
+                    function () {
+                        return extension_regex.test(this);
+                    }
+                );
+
+                if (media_entries.length) {
+                    var media_entry = media_entries[0];
+                    return media_entry.href ? media_entry.href : media_entry;
+                }
+            }
+
+            function attachEventListeners() {
+
+                window.audioplayer = $('#audioplayer');
+                window.videoplayer = $('#videoplayer');
+
+                // video play/pause on click
+                if (navigator.userAgent.toLowerCase().indexOf('firefox') == -1) {
+                    videoplayer.click(function () {
+                        this.paused ? this.play() : this.pause();
+                    });
+                }
+
+                $(document).keypress(function (e) {
+                    console.log(e, e.keyCode);
+                    e.preventDefault();
+                    if (e.keyCode === 32) {
+                        if (audioplayer.is(':visible')) {
+                            var a = audioplayer.get(0);
+                            a.paused ? a.play() : a.pause();
+                        } else if (videoplayer.is(':visible')) {
+                            var v = videoplayer.get(0);
+                            v.paused ? v.play() : v.pause();
+                        }
+                    }
+                });
+
+                // href clicks
+                $('a').click(function (e) {
+
+                    $('a').css({'color': '', 'font-style': ''});
+
+                    var lnk = $(this)
+                        .css({'color': '#ff7d12', 'font-weight': 'bold'})
+                        .attr('href');
+
+                    var mediaLnk;
+                    var contentLink; // PDF or any other text file to be loaded into the frame
+                    var isMediaLinkClick;
+
+                    var isAudioDefined = false;
+                    var isVideoDefined = false;
+                    var isPdfDefined = false;
+
+                    if (lnk.match(REGEX_TYPE_PDF)) {
+                        console.log('PDF::', lnk);
+                        e.preventDefault();
+                        isPdfDefined = true;
+                        contentLink = lnk;
+
+                        var matched_file = findMatchingFileByExtension(lnk, REGEX_TYPE_AUDIO_VIDEO);
+
+                        if (matched_file) {
+                            mediaLnk = matched_file;
+
+                            if (mediaLnk.match(REGEX_TYPE_AUDIO)) {
+                                isAudioDefined = true;
+                            } else if (mediaLnk.match(REGEX_TYPE_VIDEO)){
+                                isVideoDefined = true;
+                            }
+                        }
+                    }
+                    else if (lnk.match(REGEX_TYPE_CONTENT)) {
+                        console.log('HTML::', lnk);
+                        e.preventDefault();
+                        contentLink = lnk;
+                    }
+                    else if (lnk.match(REGEX_TYPE_AUDIO)) {
+                        isMediaLinkClick = true;
+                        mediaLnk = lnk;
+                        isAudioDefined = true;
+                        e.preventDefault();
+                    }
+                    else if (lnk.match(REGEX_TYPE_VIDEO)) {
+                        mediaLnk = lnk;
+                        isMediaLinkClick = true;
+                        isVideoDefined = true;
+                        e.preventDefault();
+                    }
+
+                    // when MP3 or Video file is clicked then try to find the corresponding PDF file
+                    if (isMediaLinkClick) {
+                        var partial_path = lnk
+                            .replace('_video', '')
+                            .replace('_review', '')
+                            .replace('_dialog', '');
+
+                        matched_file = findMatchingFileByExtension(partial_path, REGEX_TYPE_PDF);
+
+                        if (matched_file) {
+                            contentLink = matched_file;
+                        }
+                    }
+
+                    var baseFile = mediaLnk && mediaLnk.split(/\//g).pop();
+                    var _scope = angular.element($("[ng-controller]")).scope();
+
+                    if (isAudioDefined) {
+                        videoplayer.hide().attr('src', '');
+                        if (audioplayer.attr('src') !== mediaLnk) {
+                            audioplayer
+                                .attr('src', mediaLnk)
+                                .attr('title', baseFile)
+                                .show();
+                            _scope.setFirstComponent(HEIGHT_AUDIO);
+                            _scope.$apply();
+                        }
+                    } else if (isVideoDefined) {
+                        audioplayer.hide().attr('src', '');
+                        videoplayer
+                            .attr('title', baseFile)
+                            .attr('src', mediaLnk)
+                            .show();
+                        _scope.setFirstComponent(HEIGHT_VIDEO);
+                        _scope.$apply();
+                    }
+
+                    if (contentLink) {
+                        $('#docview').attr('src', contentLink);
+                    }
+                });
+            }
+
+            $(document).ready(function () {
+                attachEventListeners();
+            });
+
+        </script>
+
+    </head>
+	<body data-ng-app="mediabro" ng-controller="MainCtrl">
+    <div class="pretty-split-pane-frame">
+
+    <div data-split-pane>
+
+        <div data-split-pane-component data-width="300px">
+            <div class="pretty-split-pane-component-inner">
+                $file_list
+            </div>
+        </div>
+
+        <div data-split-pane-divider data-width="5px"></div>
+
+        <div data-split-pane-component>
+
+            <div data-split-pane data-split-pane-properties="splitPaneProperties">
+                <div data-split-pane-component class="audio-pane" data-height="32px">
+                    <div class="pretty-split-pane-component-inner">
+                        <audio style="display:none" id="audioplayer" autoplay controls>
+                        </audio>
+                        <select id="playbackSpeed"
+                                name="playbackSpeed"
+                                ng-options="opt.value as opt.name for opt in options"
+                                ng-model="data.currentSpeed"
+                                ng-change="setPlaybackRate(this)">
+                        </select>
+
+                        <video style="display:none" id="videoplayer" autoplay controls>
+                        </video>
+                    </div>
+                </div>
+                <div data-split-pane-divider data-height="5px"></div>
+                <div data-split-pane-component class="lk-no-ovrflw">
+                    <iframe id="docview"
+                            width="100%"
+                            height="99%"
+                            frameBorder="0"
+                            cellspacing="0">
+                    </iframe>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+    </div>
+		<script>
+            angular.module('mediabro', ['shagstrom.angular-split-pane'])
+                .controller('MainCtrl', function ($scope) {
+                    $scope.splitPaneProperties = {};
+
+                    $scope.setFirstComponent = function (value) {
+                        console.log(value);
+                        $scope.splitPaneProperties.firstComponentSize = value;
+                    };
+
+                    // playback speed options
+                    $scope.options = [];
+
+                    for (var i = 50; i <= 200; i += 10) {
+                        var n = i / 100;
+                        $scope.options.push({name: n + 'x', value: n});
+                    }
+
+                    $scope.data = {currentSpeed: $scope.options[5].value};
+
+                    $scope.setPlaybackRate = function (item) {
+                        console.log('playbackSpeed', item.data.currentSpeed);
+
+                        if(audioplayer.is(':visible')) {
+                            audioplayer[0].playbackRate = item.data.currentSpeed;
+                        } else if(videoplayer.is(':visible')) {
+                            videoplayer[0].playbackRate = item.data.currentSpeed;
+                        } else {
+                            $scope.data = {currentSpeed: $scope.options[5].value};
+                        }
+                    }
+                });
+		</script>
+	</body>
+</html>
