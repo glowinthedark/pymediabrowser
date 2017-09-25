@@ -50,15 +50,14 @@ icons_by_type = {
     '.webp': ICON_IMAGE,
 }
 
-BYTE_RANGE_RE = re.compile(r'bytes=(\d+)-(\d+)?$')
+REGEX_BYTE_RANGE = re.compile(r'bytes=(\d+)-(\d+)?$')
+REGEX_INTERNAL_FILE = re.compile("^/lib/(css|js|ico)/.*\.(css|js|png|ico|xml|json)$")
 
 
 def get_script_dir():
     if getattr(sys, 'frozen', False):
         # frozen
-
         dir_ = os.path.dirname(sys.executable)
-        
     else:
         # unfrozen
         dir_ = os.path.dirname(os.path.realpath(__file__))
@@ -159,7 +158,7 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
         if byte_range.strip() == '':
             return None, None
 
-        m = BYTE_RANGE_RE.match(byte_range)
+        m = REGEX_BYTE_RANGE.match(byte_range)
         if not m:
             raise ValueError('Invalid byte range %s' % byte_range)
 
@@ -248,8 +247,7 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
         return '\n'.join(result)
 
     def is_local_support_file(self, peth):
-        regex_lib_file = re.compile("^/lib/(css|js|ico)/.*\.(css|js|png|ico|xml|json)$")
-        return regex_lib_file.match(peth) is not None
+        return REGEX_INTERNAL_FILE.match(peth) is not None
 
     def translate_path(self, path):
         """Translate a /-separated PATH to the local filename syntax.
