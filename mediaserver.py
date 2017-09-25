@@ -56,7 +56,9 @@ BYTE_RANGE_RE = re.compile(r'bytes=(\d+)-(\d+)?$')
 def get_script_dir():
     if getattr(sys, 'frozen', False):
         # frozen
+
         dir_ = os.path.dirname(sys.executable)
+        
     else:
         # unfrozen
         dir_ = os.path.dirname(os.path.realpath(__file__))
@@ -66,7 +68,7 @@ def get_script_dir():
 class MyRequestHandler(SimpleHTTPRequestHandler):
 
     def __init__(self, request, client_address, server):
-        self.media_root_dir = (len(sys.argv) > 1) and sys.argv[1] or get_script_dir()
+        self.media_root_dir = (len(sys.argv) > 1) and sys.argv[1] or os.path.abspath(os.sep)
         print("Serving on {}:{}".format(server, client_address))
         print("Media root: {}".format(self.media_root_dir))
         template_path = os.path.join(get_script_dir(), "lib", "mediabro.html")
