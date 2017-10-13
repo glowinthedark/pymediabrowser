@@ -26,9 +26,9 @@ from BaseHTTPServer import HTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 
 
-ICON_AUDIO = "&#x1F3A7;"
-ICON_VIDEO = "&#x1F3A5;"
-ICON_PDF = "&#128195;"
+ICON_AUDIO = "&#x1F3A7;"  # headphones
+ICON_VIDEO = "&#x1F3A5;"  # https://emojipedia.org/movie-camera/
+ICON_PDF = "&#128195;"  # page with curl https://emojipedia.org/page-with-curl/
 ICON_DIR = "&#128193;"
 ICON_HTML = "&#x1F30D;"
 ICON_IMAGE = "&#xFE0F;"
@@ -72,7 +72,10 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
         print("Media root: {}".format(self.media_root_dir))
         template_path = os.path.join(get_script_dir(), "lib", "mediabro.html")
         print("Loading template from {}".format(template_path))
-        self.page_template = Template(open(template_path).read())
+
+        html_content = open(template_path).read()
+
+        self.page_template = Template(html_content)
 
         SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
 
@@ -195,7 +198,15 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
         entries = self.__list_directory(translated_path)
 
         if entries:
-            return self.page_template.safe_substitute(file_list=entries)
+
+            app_config = os.path.join(get_script_dir(), "config.js")
+
+            if os.path.exists(app_config):
+                custom_replacements = open(app_config).read()
+            else:
+                custom_replacements = 'URL_TRANSFORMATIONS = [];\n'
+
+            return self.page_template.safe_substitute(file_list=entries, custom_url_transformations=custom_replacements)
 
     def __list_directory(self, path):
         """
@@ -215,9 +226,8 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
 
         # sort file list with folders first
         list.sort(key=lambda a: (not os.path.isdir(os.path.join(path, a)), a.lower()))
-        result = []
-        result.append("\n<ul>\n"
-                      '<li><a title="parent folder" class="btn-back" href="..">{}</a>'.format(ICON_BACK))
+        result = ["\n<ul>\n"
+                  '<li><a title="parent folder" class="btn-back" href="..">{}</a>'.format(ICON_BACK)]
 
         for file_entry in list:
             fullname = os.path.join(path, file_entry)
@@ -285,6 +295,9 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
 class ThreadedHTTPServer(SocketServer.ThreadingMixIn, HTTPServer):
     """Handle requests in a separate thread."""
 
+    def __str__(self):
+        return "http://%s:%s" % threadedServer.server_address
+
 if __name__ == '__main__':
 
     if (len(sys.argv) > 1) and sys.argv[1].lower() in ('-h', '--help'):
@@ -293,7 +306,8 @@ if __name__ == '__main__':
 
     myHandler = MyRequestHandler
     print("Initializing ThreadedHTTPServer...")
-    server = ThreadedHTTPServer(('0.0.0.0', 8088), myHandler)
+    threadedServer = ThreadedHTTPServer(('0.0.0.0', 8088), myHandler)
     print("ThreadedHTTPServer init completed.")
+    print(threadedServer)
 
-    server.serve_forever()
+    threadedServer.serve_forever()

@@ -63,7 +63,7 @@
                 min-height: 100%;
                 display: block;
                 margin: 0 auto;
-                text-align: center
+                text-align: center;
                 float: left;
             }
 
@@ -148,20 +148,31 @@
             var REGEX_TYPE_AUDIO = /\.(mp3|m4a|aac|flac|ape|wav|ogg|oga)$/i;
             var REGEX_TYPE_VIDEO = /\.(mp4|m4v|avi|mov)/i;
             var REGEX_TYPE_AUDIO_VIDEO = /(mp3|mp4|m4v|avi|mov|ogv|webm)$/i;
-            var REGEX_TYPE_CONTENT = /\.(html|htm|js|py|sh|xml|jpg|jpeg|png|tiff|txt|bat|doc|docx|xls|xlsx|css|json)$/i;
-            var REGEX_TYPE_PDF = /\.pdf$/i;
+            var REGEX_TYPE_CONTENT = /\.(pdf|html|htm|js|py|sh|xml|jpg|jpeg|png|tiff|txt|bat|doc|docx|xls|xlsx|css|json)$/i;
+//            var REGEX_TYPE_PDF = /\.pdf$/i;
 
-            // special case for chineselearningonline only
+            $custom_url_transformations
+
+            // special case for chineselearningonline
             var CLO_PDF_REGEX = /clo_(\d{3}).*pdf/i;
+            // special case for chinesepod
+//            var CHINESEPOD_REGEX_PDF = /(.*chinesepod.*)(?:_ex)?\.(pdf|html?)/i;
+//            var CHINESEPOD_REGEX_AUDIO = /(.*chinesepod.*?)(?:(dg|pr|rv))?\.aac/i;
 
             var HEIGHT_AUDIO = 32;
             var HEIGHT_VIDEO = 500;
 
             function findMatchingFileByExtension(path, extension_regex) {
 
-                var matcher = CLO_PDF_REGEX.exec(path);
-                if (matcher) {
-                    return "../Audio/ChineseLearnOnline_" + matcher[1] + ".mp3";
+                // handle special cases
+                for (var i = 0, len = URL_TRANSFORMATIONS.length; i < len; i++) {
+                    var item = URL_TRANSFORMATIONS[i];
+
+                    var matcher = item[0].exec(path);
+
+                    if(matcher) {
+                        return item[1] + matcher[1] + item[2];
+                    }
                 }
 
                 // remove extension
@@ -225,7 +236,7 @@
                     var isVideoDefined = false;
                     var isPdfDefined = false;
 
-                    if (lnk.match(REGEX_TYPE_PDF)) {
+                    if (lnk.match(REGEX_TYPE_CONTENT)) {
                         console.log('PDF::', lnk);
                         e.preventDefault();
                         isPdfDefined = true;
@@ -244,7 +255,6 @@
                         }
                     }
                     else if (lnk.match(REGEX_TYPE_CONTENT)) {
-                        console.log('HTML::', lnk);
                         e.preventDefault();
                         contentLink = lnk;
                     }
@@ -261,14 +271,14 @@
                         e.preventDefault();
                     }
 
-                    // when MP3 or Video file is clicked then try to find the corresponding PDF file
+                    // when audio or Video file is clicked then try to find the corresponding PDF file
                     if (isMediaLinkClick) {
                         var partial_path = lnk
                             .replace('_video', '')
                             .replace('_review', '')
                             .replace('_dialog', '');
 
-                        matched_file = findMatchingFileByExtension(partial_path, REGEX_TYPE_PDF);
+                        matched_file = findMatchingFileByExtension(partial_path, REGEX_TYPE_CONTENT);
 
                         if (matched_file) {
                             contentLink = matched_file;
@@ -280,6 +290,7 @@
 
                     if (isAudioDefined) {
                         videoplayer.hide().attr('src', '');
+
                         if (audioplayer.attr('src') !== mediaLnk) {
                             audioplayer
                                 .attr('src', mediaLnk)
