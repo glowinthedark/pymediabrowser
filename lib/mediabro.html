@@ -149,15 +149,8 @@
             var REGEX_TYPE_VIDEO = /\.(mp4|m4v|avi|mov)/i;
             var REGEX_TYPE_AUDIO_VIDEO = /(mp3|mp4|m4v|avi|mov|ogv|webm)$/i;
             var REGEX_TYPE_CONTENT = /\.(pdf|html|htm|js|py|sh|xml|jpg|jpeg|png|tiff|txt|bat|doc|docx|xls|xlsx|css|json)$/i;
-//            var REGEX_TYPE_PDF = /\.pdf$/i;
 
             $custom_url_transformations
-
-            // special case for chineselearningonline
-            var CLO_PDF_REGEX = /clo_(\d{3}).*pdf/i;
-            // special case for chinesepod
-//            var CHINESEPOD_REGEX_PDF = /(.*chinesepod.*)(?:_ex)?\.(pdf|html?)/i;
-//            var CHINESEPOD_REGEX_AUDIO = /(.*chinesepod.*?)(?:(dg|pr|rv))?\.aac/i;
 
             var HEIGHT_AUDIO = 32;
             var HEIGHT_VIDEO = 500;
@@ -171,7 +164,7 @@
                     var matcher = item[0].exec(path);
 
                     if(matcher) {
-                        return item[1] + matcher[1] + item[2];
+                        return path.replace(item[0], item[1]);
                     }
                 }
 

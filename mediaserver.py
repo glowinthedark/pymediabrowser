@@ -22,6 +22,7 @@ import os
 import posixpath
 import sys
 import urllib
+import webbrowser
 from BaseHTTPServer import HTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 
@@ -62,6 +63,21 @@ def get_script_dir():
         # unfrozen
         dir_ = os.path.dirname(os.path.realpath(__file__))
     return dir_
+
+
+def open_url_in_browser(url):
+    # webbrowser.open() is partially broken in OSX Sierra v10.12.5 and fixed in v10.12.6
+    # (https://bugs.python.org/issue30392)
+    if sys.platform == 'darwin':
+        for name in ('chrome', 'google-chrome', 'safari'):
+            try:
+                controller = webbrowser.get(name)
+                controller.open_new_tab(url)
+                return
+            except:
+                pass
+    else:
+        webbrowser.open_new_tab(url)
 
 
 class MyRequestHandler(SimpleHTTPRequestHandler):
@@ -298,6 +314,7 @@ class ThreadedHTTPServer(SocketServer.ThreadingMixIn, HTTPServer):
     def __str__(self):
         return "http://%s:%s" % threadedServer.server_address
 
+
 if __name__ == '__main__':
 
     if (len(sys.argv) > 1) and sys.argv[1].lower() in ('-h', '--help'):
@@ -309,5 +326,7 @@ if __name__ == '__main__':
     threadedServer = ThreadedHTTPServer(('0.0.0.0', 8088), myHandler)
     print("ThreadedHTTPServer init completed.")
     print(threadedServer)
+
+    open_url_in_browser("http://localhost:8088")
 
     threadedServer.serve_forever()
