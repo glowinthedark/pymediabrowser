@@ -15,6 +15,9 @@ Features:
 
 For example, if a folder contains a PDF file named `lesson-01.pdf` and a video file named `lesson-01.mp4`, then clicking the PDF file will display it in the content panel while the video playback will start in the media panel above it.
 
+![LocalMediaBrowser](/mediabrowser-sample.png?raw=true "MediaBrowser8088 main window")
+
+
 ## Download
 To download prebuilt packages for MacOS and Windows go to the [Releases](https://github.com/elFua/local-media-browser/releases) section.
 
@@ -24,14 +27,14 @@ To run on Linux follow the Usage steps below.
 1. Clone or download zip and upack.
 1. Switch into the folder and run from the terminal:
 
-_to serve from the current folder_
+_to serve from the root folder_
 ```bash
 python mediaserver.py
 ```
 
-_to serve a specific folder_
+_to serve from a specific folder_
 ```bash
-python mediaserver.py /mymediafolder
+python mediaserver.py /path-to-my-media-folder
 ```
 
 Once the media server is running open the following URL in your web browser:
