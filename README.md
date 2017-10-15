@@ -1,7 +1,24 @@
 # Local Media Browser
-A minimalistic local media browser for navigating a local file system that contains audio or video files with associated content such as PDF, HTML, or TXT.
+A minimalistic local media browser app for navigating a local file system that contains audio or video files with associated content such as PDF, HTML, or TXT. It is implemented as a local web server that opens a page in your browser with content split into a file navigation side panel, a media panel for video or audio, and a content panel for PDF and HTML.
 
-For example, if a folder contains a video file named `lesson-01.mp4` and a PDF file named `lesson-01.pdf` then clicking either of the files will load both files in the corresponding panels on the page so that you can listen or watch the video while reading the PDF notes side-by-side.
+For displaying PDF files the browser must have the corresponding plugins — Chrome and Firefox support PDFs out of the box, while for Internet Explorer you must have Adobe Reader installed.
+
+Features:
+
+* browsing PDF and HTML content with associated audio/video links.
+* adjustable playback speed for media files
+* resizable navigation and content panels
+* user-defined regular expressions for matching media files to PDF, HTML or text content (config.js)
+* auto-open browser window on server start
+* custom media root folder can be specified as first argument (`/` or `c:` by default).
+* start/stop media playback on click or on spacebar press.
+
+For example, if a folder contains a PDF file named `lesson-01.pdf` and a video file named `lesson-01.mp4`, then clicking the PDF file will display it in the content panel while the video playback will start in the media panel above it.
+
+## Download
+To download prebuilt packages for MacOS and Windows go to the [Releases](https://github.com/elFua/local-media-browser/releases) section.
+
+To run on Linux follow the Usage steps below.
 
 ## Usage (Python 2.x)
 1. Clone or download zip and upack.
