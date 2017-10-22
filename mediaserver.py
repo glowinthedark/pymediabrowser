@@ -375,6 +375,16 @@ class ThreadedHTTPServer(SocketServer.ThreadingMixIn, HTTPServer):
         return "http://%s:%s" % threaded_server.server_address
 
 
+def get_ip_address():
+    ips = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")] or [
+        [(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in
+         [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]
+
+    if len(ips):
+        return ips[0]
+    else:
+        return '0.0.0.0'
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Local media browser with M3U playlist generator')
@@ -392,7 +402,7 @@ if __name__ == '__main__':
     parser.add_argument('--domain', '-d',
                         help='domain to use in M3U playlists; by default the curren IP addres is used',
                         action='store',
-                        default=socket.gethostbyname(socket.gethostname()))
+                        default=get_ip_address())
     parser.add_argument('--no-browser', '-n',
                         help="don't automatically open the system web browser",
                         action='store_true',
