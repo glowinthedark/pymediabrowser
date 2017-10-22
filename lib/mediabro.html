@@ -180,6 +180,7 @@
             var REGEX_TYPE_VIDEO = /\.(mp4|m4v|avi|mov)/i;
             var REGEX_TYPE_AUDIO_VIDEO = /(mp3|mp4|m4v|avi|mov|ogv|webm)$/i;
             var REGEX_TYPE_CONTENT = /\.(pdf|html|htm|js|py|sh|xml|jpg|jpeg|png|tiff|txt|bat|doc|docx|xls|xlsx|css|json)$/i;
+            var REGEX_TYPE_CONTENT_FULL_SCREEN = /\.(jpg|jpeg|png|tiff)$/i;
 
             $custom_url_transformations
 
@@ -260,6 +261,10 @@
                     var isAudioDefined = false;
                     var isVideoDefined = false;
                     var isPdfDefined = false;
+
+                    if (lnk.match(REGEX_TYPE_CONTENT_FULL_SCREEN)) {
+                        window.isMaximizedContent = true;
+                    }
 
                     if (lnk.match(REGEX_TYPE_CONTENT)) {
                         console.log('PDF::', lnk);
@@ -345,6 +350,16 @@
 
             $(document).ready(function () {
                 attachEventListeners();
+
+                $('#docview').load(function(e) {
+                    if (window.isMaximizedContent) {
+                        var _scope = angular.element($("[ng-controller]")).scope();
+                        _scope.setFirstComponent(0);
+                        window.isMaximizedContent = null;
+                    }
+                    var docHead = $(e.target).contents().find("head");
+                    docHead.append('<style type="text/css">body{height: 100%} body>img {display: block; max-width:100%; max-height: 100%;margin: auto;}</style>');
+                });
             });
 
         </script>
