@@ -66,6 +66,11 @@ def get_script_dir():
 
 
 def open_url_in_browser(url):
+    arch = os.uname()[4]
+    if arch.startswith('arm'):
+        # assume arm boxes are headless
+        return
+
     # webbrowser.open() is partially broken in OSX Sierra v10.12.5 and fixed in v10.12.6
     # (https://bugs.python.org/issue30392)
     if sys.platform == 'darwin':
