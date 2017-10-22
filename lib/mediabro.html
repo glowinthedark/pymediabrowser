@@ -43,10 +43,17 @@
                 margin: 0;
             }
 
+            .media-pane {
+                position: relative;
+            }
+
             #playbackSpeed {
-                max-width: 10%;
-                min-width: 50px;
-                float: right;
+                max-width: 30px;
+                min-width: 30px;
+                position: absolute;
+                top: 0;
+                right: 0;
+                z-index: 1000;
             }
 
             audio {
@@ -54,8 +61,7 @@
                 max-width: 90%;
                 width: 90%;
                 display: block;
-                margin: 0;
-                float: left;
+                margin: 0 40px 0 0;
             }
 
             video {
@@ -64,7 +70,6 @@
                 display: block;
                 margin: 0 auto;
                 text-align: center;
-                float: left;
             }
 
             iframe {
@@ -361,8 +366,8 @@
         <div data-split-pane-component>
 
             <div data-split-pane data-split-pane-properties="splitPaneProperties">
-                <div data-split-pane-component class="audio-pane" data-height="32px">
-                    <div class="pretty-split-pane-component-inner">
+                <div data-split-pane-component data-height="32px">
+                    <div class="pretty-split-pane-component-inner media-pane">
                         <audio style="display:none" id="audioplayer" autoplay controls>
                         </audio>
                         <select id="playbackSpeed"

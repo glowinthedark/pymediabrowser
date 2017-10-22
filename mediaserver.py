@@ -18,13 +18,12 @@ import re
 import socket
 import webbrowser
 from string import Template
-
+from urllib import quote, unquote
 import SocketServer
 import cgi
 import os
 import posixpath
 import sys
-import urllib
 from BaseHTTPServer import HTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 
@@ -199,7 +198,7 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
         print(self.path)
         print(self.version_string())
 
-        absolute_path = os.path.join(self.media_root_dir, urllib.unquote(self.path[1:]))
+        absolute_path = os.path.join(self.media_root_dir, unquote(self.path[1:]))
 
         if absolute_path.endswith(MEDIALIST_M3U):
             data = self.generate_m3u(absolute_path)
@@ -280,7 +279,7 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
             if os.path.islink(fullname):
                 displayname = file_entry + "@"
                 # Note: a link to a directory displays with @ and links with /
-            quoted_link = urllib.quote(linkname)
+            quoted_link = quote(linkname)
 
             _, extension = os.path.splitext(fullname)
             icon = (is_dir and ICON_DIR) or icons_by_type.get(extension.lower(), ICON_UNKNOWN)
@@ -310,7 +309,7 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
             fullname = os.path.join(path, file_entry)
             path_relative_to_webroot = fullname.replace(self.media_root_dir, "")
 
-            result.append((cgi.escape(file_entry), "http://{}:{}/{}".format(args.domain, args.port, urllib.quote(path_relative_to_webroot))))
+            result.append((cgi.escape(file_entry), "http://{}:{}/{}".format(args.domain, args.port, quote(path_relative_to_webroot))))
 
         return result
 
@@ -331,7 +330,7 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
         path = path.split('#',1)[0]
         # Don't forget explicit trailing slash when normalizing. Issue17324
         trailing_slash = path.rstrip().endswith('/')
-        path = posixpath.normpath(urllib.unquote(path))
+        path = posixpath.normpath(unquote(path))
         words = path.split('/')
         words = filter(None, words)
 
