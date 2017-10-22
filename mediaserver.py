@@ -61,7 +61,7 @@ MEDIALIST_M3U = 'medialist.m3u'
 
 REGEX_BYTE_RANGE = re.compile(r'bytes=(\d+)-(\d+)?$')
 REGEX_INTERNAL_FILE = re.compile("^/lib/(css|js|ico)/.*\.(css|js|png|ico|xml|json)$")
-REGEX_MEDIA_FILE = re.compile("\.(aac|aiff|avi|mp1|mp2|mp3|mp4|m4a|m4v|mpeg|mpg|oga|ogg|ogv|ogm|wav|webm|wma|wmv)$")
+REGEX_MEDIA_FILE = re.compile("\.(3gp|3gpp|aac|aiff|avi|mp1|mp2|mp3|mp4|m4a|m4v|mpeg|mpg|oga|ogg|ogv|ogm|wav|webm|wma|wmv)$")
 
 def get_script_dir():
     if getattr(sys, 'frozen', False):
