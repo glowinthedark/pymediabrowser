@@ -14,6 +14,8 @@
 # Dan Vanderkam for RangeHTTPServer - https://github.com/danvk/RangeHTTPServer
 #
 import re
+import socket
+import webbrowser
 from string import Template
 
 import SocketServer
@@ -22,10 +24,14 @@ import os
 import posixpath
 import sys
 import urllib
-import webbrowser
 from BaseHTTPServer import HTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 
+# https://emojipedia.org/
+
+VERSION = '8088.11'
+
+DEFAULT_PORT = 8088
 
 ICON_AUDIO = "&#x1F3A7;"  # headphones
 ICON_VIDEO = "&#x1F3A5;"  # https://emojipedia.org/movie-camera/
@@ -51,9 +57,11 @@ icons_by_type = {
     '.webp': ICON_IMAGE,
 }
 
+MEDIALIST_M3U = 'medialist.m3u'
+
 REGEX_BYTE_RANGE = re.compile(r'bytes=(\d+)-(\d+)?$')
 REGEX_INTERNAL_FILE = re.compile("^/lib/(css|js|ico)/.*\.(css|js|png|ico|xml|json)$")
-
+REGEX_MEDIA_FILE = re.compile("\.(aac|aiff|avi|mp1|mp2|mp3|mp4|m4a|m4v|mpeg|mpg|oga|ogg|ogv|ogm|wav|webm|wma|wmv)$")
 
 def get_script_dir():
     if getattr(sys, 'frozen', False):
@@ -66,11 +74,6 @@ def get_script_dir():
 
 
 def open_url_in_browser(url):
-    arch = os.uname()[4]
-    if arch.startswith('arm'):
-        # assume arm boxes are headless
-        return
-
     # webbrowser.open() is partially broken in OSX Sierra v10.12.5 and fixed in v10.12.6
     # (https://bugs.python.org/issue30392)
     if sys.platform == 'darwin':
@@ -88,11 +91,8 @@ def open_url_in_browser(url):
 class MyRequestHandler(SimpleHTTPRequestHandler):
 
     def __init__(self, request, client_address, server):
-        self.media_root_dir = (len(sys.argv) > 1) and sys.argv[1] or os.path.abspath(os.sep)
-        print("Serving on {}:{}".format(server, client_address))
-        print("Media root: {}".format(self.media_root_dir))
+        self.media_root_dir = args.webroot
         template_path = os.path.join(get_script_dir(), "lib", "mediabro.html")
-        print("Loading template from {}".format(template_path))
 
         html_content = open(template_path).read()
 
@@ -200,19 +200,27 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
 
         absolute_path = os.path.join(self.media_root_dir, urllib.unquote(self.path[1:]))
 
+        if absolute_path.endswith(MEDIALIST_M3U):
+            data = self.generate_m3u(absolute_path)
+            self.send_response(200)
+            self.send_header("Content-type", "audio/mpegurl")
+            self.send_header("Content-length", len(data))
+            self.end_headers()
+            self.wfile.write(data)
+            return
+
         if not os.path.isdir(absolute_path):
             return SimpleHTTPRequestHandler.do_GET(self)
 
-        response_data = self.get_response()
+        response_data = self.get_directory_listing()
         self.send_response(200)
         encoding = sys.getfilesystemencoding()
         self.send_header("Content-type", "text/html; charset=%s" % encoding)
-        self.send_header("Content-type", "text/html")
         self.send_header("Content-length", len(response_data))
         self.end_headers()
         self.wfile.write(response_data)
 
-    def get_response(self):
+    def get_directory_listing(self):
 
         translated_path = self.translate_path(self.path)
 
@@ -247,8 +255,17 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
 
         # sort file list with folders first
         list.sort(key=lambda a: (not os.path.isdir(os.path.join(path, a)), a.lower()))
-        result = ["\n<ul>\n"
-                  '<li><a title="parent folder" class="btn-back" href="..">{}</a>'.format(ICON_BACK)]
+        result = ['''
+    <nav>
+        <div class="inlined btn-back">
+            <a title="parent folder" href="..">{}</a>
+        </div>
+        <div class="inlined m3u">
+            <a target="_blank" href="{}">M3U</a>
+        </div>
+    </nav>
+    <div style="clear:both"></div>
+<ul>'''.format(ICON_BACK, MEDIALIST_M3U)]
 
         for file_entry in list:
             fullname = os.path.join(path, file_entry)
@@ -277,7 +294,27 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
 
         return '\n'.join(result)
 
-    def is_local_support_file(self, peth):
+    def __list_directory_bare(self, path):
+        try:
+            list = os.listdir(path)
+        except os.error:
+            self.send_error(404, "No permission to list directory")
+            return None
+
+        # sort file list with folders first
+        list.sort(key=lambda a: (not os.path.isdir(os.path.join(path, a)), a.lower()))
+        result = []
+
+        for file_entry in list:
+            fullname = os.path.join(path, file_entry)
+            path_relative_to_webroot = fullname.replace(self.media_root_dir, "")
+
+            result.append((cgi.escape(file_entry), "http://{}:{}/{}".format(args.domain, args.port, urllib.quote(path_relative_to_webroot))))
+
+        return result
+
+    @staticmethod
+    def is_local_support_file(peth):
         return REGEX_INTERNAL_FILE.match(peth) is not None
 
     def translate_path(self, path):
@@ -312,26 +349,64 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
             path += '/'
         return path
 
+    def generate_m3u(self, path):
+
+        path = path.replace(MEDIALIST_M3U, "")
+        # translated_path = self.translate_path(path)
+
+        entries = self.__list_directory_bare(path)
+
+        if not entries:
+            return ""
+
+        entries = [(k, v) for k, v in entries if REGEX_MEDIA_FILE.search(k)]
+
+        print(entries)
+        return """#EXTM3U
+
+""" + """#EXTINF: """.join((k + "\n" + v + "\n" for k, v in entries))
+
 
 class ThreadedHTTPServer(SocketServer.ThreadingMixIn, HTTPServer):
     """Handle requests in a separate thread."""
 
     def __str__(self):
-        return "http://%s:%s" % threadedServer.server_address
+        return "http://%s:%s" % threaded_server.server_address
 
 
 if __name__ == '__main__':
 
-    if (len(sys.argv) > 1) and sys.argv[1].lower() in ('-h', '--help'):
-        print('''Usage: python {} [path]'''.format(os.path.basename(__file__)))
-        sys.exit(-1)
+    parser = argparse.ArgumentParser(description='Local media browser with M3U playlist generator')
 
-    myHandler = MyRequestHandler
+    parser.add_argument('webroot',
+                        help='Web root directory. System root will be used if omitted',
+                        nargs='?',
+                        action='store',
+                        default=os.path.abspath(os.sep))
+    parser.add_argument('--port', '-p',
+                        help='port',
+                        type=int,
+                        action='store',
+                        default=DEFAULT_PORT)
+    parser.add_argument('--domain', '-d',
+                        help='domain to use in M3U playlists; by default the curren IP addres is used',
+                        action='store',
+                        default=socket.gethostbyname(socket.gethostname()))
+    parser.add_argument('--no-browser', '-n',
+                        help="don't automatically open the system web browser",
+                        action='store_true',
+                        default=False)
+
+    args = parser.parse_args(sys.argv[1:])
+
     print("Initializing ThreadedHTTPServer...")
-    threadedServer = ThreadedHTTPServer(('0.0.0.0', 8088), myHandler)
+    threaded_server = ThreadedHTTPServer((args.domain, args.port), MyRequestHandler)
     print("ThreadedHTTPServer init completed.")
-    print(threadedServer)
+    print(threaded_server)
+    url = "http://{}:{}".format(args.domain, args.port)
+    print("Serving on {}".format(url))
 
-    open_url_in_browser("http://localhost:8088")
+    if not args.no_browser and not os.uname()[4].startswith('arm'):
+        open_url_in_browser(url)
 
-    threadedServer.serve_forever()
+    threaded_server.serve_forever()

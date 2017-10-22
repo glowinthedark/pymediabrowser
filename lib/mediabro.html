@@ -112,15 +112,41 @@
                 margin: 0;
             }
 
-            .btn-back {
-                display: block;
+            nav {
+                white-space: nowrap;
+                overflow: hidden;
+            }
+
+            .inlined {
+                display: table-cell;
                 margin: 0;
-                padding: 0 0 0 0px;
+                padding: 0;
+            }
+
+            .inlined a {
+                display: inline-block;
+                width: 100%;
+            }
+
+            .btn-back {
                 background-color: white;
                 font-size: 140%;
-                width: 100%;
+                width: 70%;
                 cursor: pointer;
+                float: left;
                 border-bottom: 1px solid #fafafa;
+                padding-left: 5px;
+            }
+
+            .m3u {
+                padding-right: 5px;
+                min-width: 16%;
+                float: right;
+                text-align: right;
+
+            }
+            .m3u a{
+                font-size: 10px;
             }
 
             .split-pane .lk-no-ovrflw {
@@ -294,16 +320,19 @@
                         }
                     } else if (isVideoDefined) {
                         audioplayer.hide().attr('src', '');
-                        videoplayer
-                            .attr('title', baseFile)
-                            .attr('src', mediaLnk)
-                            .show();
-                        _scope.setFirstComponent(HEIGHT_VIDEO);
-                        _scope.$apply();
+
+                        if (videoplayer.attr('src') !== mediaLnk) {
+                            videoplayer
+                                .attr('title', baseFile)
+                                .attr('src', mediaLnk)
+                                .show();
+                            _scope.setFirstComponent(HEIGHT_VIDEO);
+                            _scope.$apply();
+                        }
                     }
 
-                    if (contentLink) {
-                        $('#docview').attr('src', contentLink);
+                    if (contentLink && contentPanel.attr('src') !== contentLink) {
+                        contentPanel.attr('src', contentLink);
                     }
                 });
             }
