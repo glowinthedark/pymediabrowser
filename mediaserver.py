@@ -404,8 +404,11 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
 
         print(entries)
         return """#EXTM3U
-
-""" + """#EXTINF: """.join((k + "\n" + v + "\n" for k, v in entries))
+#EXT-X-PLAYLIST-TYPE:VOD
+#EXT-X-TARGETDURATION:1
+#EXT-X-VERSION:3
+#EXT-X-MEDIA-SEQUENCE:0
+#EXTINF:1.0,""" + """#EXTINF:1.0,""".join((k + "\n" + v + "\n" for k, v in entries))
 
 
 class ThreadedHTTPServer(SocketServer.ThreadingMixIn, HTTPServer):
