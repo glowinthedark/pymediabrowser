@@ -173,14 +173,22 @@
                 color: lightgray;
             }
 
+            .preview {
+                display: block;
+                max-width: 300px;
+                max-height: 200px;
+                width: auto;
+                height: auto;
+                margin: 0 auto;
+            }
         </style>
         <script type="text/javascript">
 
             var REGEX_TYPE_AUDIO = /\.(mp3|m4a|aac|flac|ape|wav|ogg|oga)$/i;
             var REGEX_TYPE_VIDEO = /\.(mp4|m4v|avi|mov)/i;
             var REGEX_TYPE_AUDIO_VIDEO = /(mp3|mp4|m4v|avi|mov|ogv|webm)$/i;
-            var REGEX_TYPE_CONTENT = /\.(pdf|html|htm|js|py|sh|xml|jpg|jpeg|png|tiff|txt|bat|doc|docx|xls|xlsx|css|json)$/i;
-            var REGEX_TYPE_CONTENT_FULL_SCREEN = /\.(jpg|jpeg|png|tiff)$/i;
+            var REGEX_TYPE_CONTENT = /\.(pdf|html|htm|js|py|sh|xml|txt|bat|doc|docx|xls|xlsx|css|json|java|c|cpp|h|hpp|gif|jpg|jpeg|apng|png|tiff|bmp|eps|pcx|webp|ico|psd|xpm|wmf)$/i;
+            var REGEX_TYPE_CONTENT_FULL_SCREEN = /\.(gif|jpg|jpeg|apng|png|tiff|bmp|eps|pcx|webp|ico|icns|psd|xpm|wmf)$/i;
 
             $custom_url_transformations
 
@@ -355,10 +363,11 @@
                     if (window.isMaximizedContent) {
                         var _scope = angular.element($("[ng-controller]")).scope();
                         _scope.setFirstComponent(0);
+                        _scope.$apply();
                         window.isMaximizedContent = null;
                     }
                     var docHead = $(e.target).contents().find("head");
-                    docHead.append('<style type="text/css">body{height: 100%} body>img {display: block; max-width:100%; max-height: 100%;margin: auto;}</style>');
+                    docHead.append('<style type="text/css">body{height:100%; position:relative} body>img {position:absolute; max-width:100%; max-height:100%; margin:auto; top:0; bottom: 0}</style>');
                 });
             });
 

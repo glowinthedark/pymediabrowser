@@ -27,6 +27,12 @@ import sys
 from BaseHTTPServer import HTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 
+from StringIO import StringIO
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
+
 # https://emojipedia.org/
 
 VERSION = '8088.11'
@@ -48,6 +54,8 @@ icons_by_type = {
     '.mp4': ICON_VIDEO,
     '.m4v': ICON_VIDEO,
     '.mov': ICON_VIDEO,
+    '.3gp': ICON_VIDEO,
+    '.3gpp': ICON_VIDEO,
     '.webm': ICON_VIDEO,
     '.html': ICON_HTML,
     '.jpg': ICON_IMAGE,
@@ -58,10 +66,13 @@ icons_by_type = {
 }
 
 MEDIALIST_M3U = 'medialist.m3u'
+IMG_THUMBNAIL_SELECTOR = '?mediabro-thumb.jpg'
 
 REGEX_BYTE_RANGE = re.compile(r'bytes=(\d+)-(\d+)?$')
-REGEX_INTERNAL_FILE = re.compile("^/lib/(css|js|ico)/.*\.(css|js|png|ico|xml|json)$")
-REGEX_MEDIA_FILE = re.compile("\.(3gp|3gpp|aac|aiff|avi|mp1|mp2|mp3|mp4|m4a|m4v|mpeg|mpg|oga|ogg|ogv|ogm|wav|webm|wma|wmv)$")
+REGEX_INTERNAL_FILE = re.compile("^/lib/(css|js|ico)/.*\.(css|js|png|ico|xml|json)$", re.IGNORECASE)
+REGEX_MEDIA_FILE = re.compile("\.(3gp|3gpp|aac|aiff|avi|mov|mp1|mp2|mp3|mp4|m4a|m4v|mpeg|mpg|oga|ogg|ogv|ogm|wav|webm|wma|wmv)$", re.IGNORECASE)
+REGEX_IMAGE_FILE = re.compile("\.(gif|jpg|jpeg|apng|png|tif|tiff|bmp|eps|pcx|webp|ico|icns|psd|xpm|wmf)$", re.IGNORECASE)
+
 
 def get_script_dir():
     if getattr(sys, 'frozen', False):
@@ -82,10 +93,24 @@ def open_url_in_browser(url):
                 controller = webbrowser.get(name)
                 controller.open_new_tab(url)
                 return
-            except:
-                pass
+            except Exception as e:
+                print(e)
     else:
         webbrowser.open_new_tab(url)
+
+
+def make_thumbnail(image_path, size):
+    img = Image.open(image_path)
+    ''':type : PIL.Image'''
+
+    if img.mode != 'RGB':
+        img = img.convert('RGB')
+
+    img.thumbnail(size)
+    img_io = StringIO()
+    img.save(img_io, 'JPEG', quality=50)
+    img_io.seek(0)
+    return img_io.getvalue()
 
 
 class MyRequestHandler(SimpleHTTPRequestHandler):
@@ -209,6 +234,16 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
             self.wfile.write(data)
             return
 
+        if IMG_THUMBNAIL_SELECTOR in absolute_path and Image:
+            real_image_path = absolute_path.replace(IMG_THUMBNAIL_SELECTOR, '')
+            thumbnail_binary = make_thumbnail(real_image_path, (300, 200))
+            self.send_response(200)
+            self.send_header("Content-type", "image/jpeg")
+            self.send_header("Content-length", len(thumbnail_binary))
+            self.end_headers()
+            self.wfile.write(thumbnail_binary)
+            return
+
         if not os.path.isdir(absolute_path):
             return SimpleHTTPRequestHandler.do_GET(self)
 
@@ -289,8 +324,14 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
             if icon:
                 displayname = icon + '&nbsp;' + cgi.escape(displayname)
 
-            result.append('<li><a %s title="%s" href="%s">%s</a>\n'
-                          % (file_type_marker, displayname, quoted_link, displayname))
+            image_preview = ""
+            if re.search(REGEX_IMAGE_FILE, file_entry):
+                image_preview = '''<img class="preview" src="{link}{selector}">'''.format(
+                    link=quoted_link,
+                    selector=IMG_THUMBNAIL_SELECTOR)
+
+            result.append('<li><a %s title="%s" href="%s">%s%s</a>\n'
+                          % (file_type_marker, displayname, quoted_link, image_preview, displayname))
 
         return '\n'.join(result)
 
