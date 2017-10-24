@@ -185,9 +185,9 @@
         <script type="text/javascript">
 
             var REGEX_TYPE_AUDIO = /\.(mp3|m4a|aac|flac|ape|wav|ogg|oga)$/i;
-            var REGEX_TYPE_VIDEO = /\.(mp4|m4v|avi|mov)/i;
+            var REGEX_TYPE_VIDEO = /\.(mp4|m4v|avi|mov|mpg|mpeg)/i;
             var REGEX_TYPE_AUDIO_VIDEO = /(mp3|mp4|m4v|avi|mov|ogv|webm)$/i;
-            var REGEX_TYPE_CONTENT = /\.(pdf|html|htm|js|py|sh|xml|txt|bat|doc|docx|xls|xlsx|css|json|java|c|cpp|h|hpp|gif|jpg|jpeg|apng|png|tiff|bmp|eps|pcx|webp|ico|psd|xpm|wmf)$/i;
+            var REGEX_TYPE_CONTENT = /\.(pdf|html|htm|js|py|sh|xml|txt|bat|doc|docx|xls|xlsx|css|json|java|c|cpp|h|hpp|srt|cfg|conf|ini|gif|jpg|jpeg|apng|png|tiff|bmp|eps|pcx|webp|ico|psd|xpm|wmf)$/i;
             var REGEX_TYPE_CONTENT_FULL_SCREEN = /\.(gif|jpg|jpeg|apng|png|tiff|bmp|eps|pcx|webp|ico|icns|psd|xpm|wmf)$/i;
 
             $custom_url_transformations
@@ -367,7 +367,7 @@
                         window.isMaximizedContent = null;
                     }
                     var docHead = $(e.target).contents().find("head");
-                    docHead.append('<style type="text/css">body{height:100%; position:relative} body>img {position:absolute; max-width:100%; max-height:100%; margin:auto; top:0; bottom: 0}</style>');
+                    docHead.append('<style type="text/css">body{height:100%; position:relative} body>img {display:block; text-align:center; position:absolute; max-width:100%; max-height:100%; margin:auto; top:0; bottom: 0; left:0; right: 0}</style>');
                 });
             });
 

@@ -47,6 +47,7 @@ ICON_HTML = "&#x1F30D;"
 ICON_IMAGE = "&#xFE0F;"
 ICON_UNKNOWN = "&#x2753;"
 ICON_BACK = "&#x21B0;"
+ICON_TEXT = "&#x1F4C3;"
 
 icons_by_type = {
     '.pdf': ICON_PDF,
@@ -63,6 +64,13 @@ icons_by_type = {
     '.png': ICON_IMAGE,
     '.gif': ICON_IMAGE,
     '.webp': ICON_IMAGE,
+    '.txt': ICON_TEXT,
+    '.srt': ICON_TEXT,
+    '.ini': ICON_TEXT,
+    '.cfg': ICON_TEXT,
+    '.conf': ICON_TEXT,
+    '.vimrc': ICON_TEXT,
+    '.bashrc': ICON_TEXT,
 }
 
 MEDIALIST_M3U = 'medialist.m3u'
