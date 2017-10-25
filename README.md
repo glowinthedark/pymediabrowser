@@ -21,6 +21,11 @@ Example: if a folder contains a PDF file named `lesson-01.pdf` and a video file 
 
 ![LocalMediaBrowser](/mediabrowser-sample.png?raw=true "MediaBrowser8088 main window")
 
+## Supported media formats
+Playback of media files is handled by the web browser therefore support is limited to the capabilities of the corresponding HTML5 `<audio/>` and `<video/>` elements which currently includes: MP3, MP4 audio/video (MP4 H.264 AAC or MP3), MP4 (Flac audio), OGG audio and video, FLAC, OGG (Flac), WebM (VP8, VP9 codecs), WAV (PCM), WebM (video and audio). 
+
+For more details refer to [mozilla browser media compatibility table](https://developer.mozilla.org/en-US/docs/Web/HTML/Supported_media_formats#Browser_compatibility).
+
 
 ## Download
 To download prebuilt packages for MacOS and Windows go to the [Releases](https://github.com/elFua/local-media-browser/releases) section.
