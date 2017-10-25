@@ -7,7 +7,7 @@ For displaying PDF files the browser must have the corresponding plugins — Chr
 
 #### Features:
 
-* M3U playlist generation for folders that contain media files
+* M3U playlist generation for folders with media files
 * browsing images with thumbnail previews in the left panel (gallery mode)
 * displaying PDF and HTML content with associated audio/video links
 * user-defined regular expressions for matching media files to PDF, HTML or text content (`config.js`)
@@ -22,13 +22,12 @@ Example: if a folder contains a PDF file named `lesson-01.pdf` and a video file 
 ![LocalMediaBrowser](/mediabrowser-sample.png?raw=true "MediaBrowser8088 main window")
 
 ## Supported media formats
-Playback of media files is handled by the web browser therefore support is limited to the capabilities of the corresponding HTML5 `<audio/>` and `<video/>` elements which currently includes: MP3, MP4 audio/video (MP4 H.264 AAC or MP3), MP4 (Flac audio), OGG audio and video, FLAC, OGG (Flac), WebM (VP8, VP9 codecs), WAV (PCM), WebM (video and audio). 
+Playback of media files is handled by the web browser therefore support is limited to the capabilities of the corresponding HTML5 `<audio/>` and `<video/>` elements which currently includes: MP3, MP4 audio/video (H.264, AAC, MP3 codecs), MP4 container with Flac codec, OGG audio and video (Theora, Vorbis, Opus, Flac codecs), FLAC, WebM audio/video (VP8, VP9 codecs), WAV (PCM).
 
 For more details refer to [mozilla browser media compatibility table](https://developer.mozilla.org/en-US/docs/Web/HTML/Supported_media_formats#Browser_compatibility).
 
-
 ## Download
-To download prebuilt packages for MacOS and Windows go to the [Releases](https://github.com/elFua/local-media-browser/releases) section.
+Prebuilt packages for MacOS and Windows can be downloaded from the [Releases](https://github.com/elFua/local-media-browser/releases) section.
 
 To run on Linux follow the Usage steps below.
 
