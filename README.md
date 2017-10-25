@@ -1,9 +1,9 @@
 # Local Media Browser
-A local media browser app for navigating a file systems that contains images, audio or video files with associated content such as PDF, HTML, or TXT. 
+A local media browser app for navigating file systems that contains images, audio or video files, and displaying associated content such as PDF, HTML, or TXT. 
 
 The app is implemented as a local web server that opens a page in your browser with content split into a file navigation side panel, a media panel for video or audio, and a content panel for PDF and HTML.
 
-For displaying PDF files the browser must have the corresponding plugins — Chrome and Firefox support PDFs out of the box. For displaying PDF files in Internet Explorer, Adobe Reader must be installed.
+For displaying PDF files the browser must have the corresponding plugins — Chrome and Firefox support PDFs out of the box. For displaying PDF files in Internet Explorer, Adobe Reader or [Foxit Reader plugin](https://help.foxitsoftware.com/kb/how-to-configure-internet-explorer-to-use-foxit-pdf-plugin.php) must be installed.
 
 #### Features:
 
