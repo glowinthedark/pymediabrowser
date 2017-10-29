@@ -67,6 +67,7 @@
             video {
                 height: 100%;
                 min-height: 100%;
+                max-width: 100%;
                 display: block;
                 margin: 0 auto;
                 text-align: center;
@@ -115,6 +116,8 @@
                 list-style: none;
                 padding: 0 .1em .1em .7em;
                 margin: 0;
+                display: block;
+                clear: both;
             }
 
             nav {
@@ -181,12 +184,19 @@
                 height: auto;
                 margin: 0 auto;
             }
+
+            .size {
+                float: right;
+                color: gray;
+                font-size: 90%;
+                font-stretch: ultra-condensed;
+            }
         </style>
         <script type="text/javascript">
 
             var REGEX_TYPE_AUDIO = /\.(mp3|m4a|aac|flac|ape|wav|ogg|oga)$/i;
-            var REGEX_TYPE_VIDEO = /\.(mp4|m4v|avi|mov|mpg|mpeg)/i;
-            var REGEX_TYPE_AUDIO_VIDEO = /(mp3|mp4|m4v|avi|mov|ogv|webm)$/i;
+            var REGEX_TYPE_VIDEO = /\.(mp4|m4v|avi|mov|mpg|mpeg|webm)/i;
+            var REGEX_TYPE_AUDIO_VIDEO = /(mp3|m4a|aac|flac|ape|wav|ogg|oga|ogv|mp4|m4v|avi|mov|mpg|mpeg|webm)$/i;
             var REGEX_TYPE_CONTENT = /\.(pdf|html|htm|js|py|sh|xml|txt|bat|doc|docx|xls|xlsx|css|json|java|c|cpp|h|hpp|srt|cfg|conf|ini|gif|jpg|jpeg|apng|png|tiff|bmp|eps|pcx|webp|ico|psd|xpm|wmf)$/i;
             var REGEX_TYPE_CONTENT_FULL_SCREEN = /\.(gif|jpg|jpeg|apng|png|tiff|bmp|eps|pcx|webp|ico|icns|psd|xpm|wmf)$/i;
 

@@ -22,6 +22,7 @@ from urllib import quote, unquote
 import SocketServer
 import cgi
 import os
+import platform
 import posixpath
 import sys
 from BaseHTTPServer import HTTPServer
@@ -39,9 +40,9 @@ VERSION = '8088.11'
 
 DEFAULT_PORT = 8088
 
-ICON_AUDIO = "&#x1F3A7;"  # headphones
-ICON_VIDEO = "&#x1F3A5;"  # https://emojipedia.org/movie-camera/
-ICON_PDF = "&#128195;"  # page with curl https://emojipedia.org/page-with-curl/
+ICON_AUDIO = "&#x1F3A7;"
+ICON_VIDEO = "&#x1F3A5;"
+ICON_PDF = "&#128195;"
 ICON_DIR = "&#128193;"
 ICON_HTML = "&#x1F30D;"
 ICON_IMAGE = "&#xFE0F;"
@@ -73,12 +74,15 @@ icons_by_type = {
     '.bashrc': ICON_TEXT,
 }
 
+# bytes in a megabyte; for displaying friendly file sizes
+MBFACTOR = float(1 << 20)
+
 MEDIALIST_M3U = 'medialist.m3u'
 IMG_THUMBNAIL_SELECTOR = '?mediabro-thumb.jpg'
 
 REGEX_BYTE_RANGE = re.compile(r'bytes=(\d+)-(\d+)?$')
 REGEX_INTERNAL_FILE = re.compile("^/lib/(css|js|ico)/.*\.(css|js|png|ico|xml|json)$", re.IGNORECASE)
-REGEX_MEDIA_FILE = re.compile("\.(3gp|3gpp|aac|aiff|avi|mov|mp1|mp2|mp3|mp4|m4a|m4v|mpeg|mpg|oga|ogg|ogv|ogm|wav|webm|wma|wmv)$", re.IGNORECASE)
+REGEX_MEDIA_FILE = re.compile("\.(3gp|3gpp|aac|aiff|avi|mov|mp1|mp2|mp3|mp4|m4a|flac|m4v|mpeg|mpg|oga|ogg|ogv|ogm|wav|webm|wma|wmv)$", re.IGNORECASE)
 REGEX_IMAGE_FILE = re.compile("\.(gif|jpg|jpeg|apng|png|tif|tiff|bmp|eps|pcx|webp|ico|icns|psd|xpm|wmf)$", re.IGNORECASE)
 
 
@@ -330,16 +334,32 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
             file_type_marker = 'data-type="{type}"'.format(type=is_dir and 'dir' or 'file')
 
             if icon:
-                displayname = icon + '&nbsp;' + cgi.escape(displayname)
+                displayname = "{}&nbsp;{}".format(icon, cgi.escape(displayname))
 
+            size_info = ""
             image_preview = ""
+            title = displayname
+
+            if not is_dir:
+                size = get_file_size(fullname)
+
+                title = "{} [{}]".format(displayname, size)
+
+                if not args.suppress_size:
+                    size_info = '<span class="size">{}</span>'.format(size)
+
             if re.search(REGEX_IMAGE_FILE, file_entry):
                 image_preview = '''<img class="preview" src="{link}{selector}">'''.format(
                     link=quoted_link,
                     selector=IMG_THUMBNAIL_SELECTOR)
 
-            result.append('<li><a %s title="%s" href="%s">%s%s</a>\n'
-                          % (file_type_marker, displayname, quoted_link, image_preview, displayname))
+            result.append('<li><a {type} title="{title}" href="{link}">{preview}{name}</a>{size_info}\n'.format
+                          (type=file_type_marker,
+                           title=title,
+                           link=quoted_link,
+                           preview=image_preview,
+                           name=displayname,
+                           size_info=size_info))
 
         return '\n'.join(result)
 
@@ -354,11 +374,22 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
         list.sort(key=lambda a: (not os.path.isdir(os.path.join(path, a)), a.lower()))
         result = []
 
+        domain = args.domain
+
+        # for M3U playlists use the LAN IP
+        if domain.startswith('0.') or domain.startswith('127.'):
+            domain = get_ip_address()
+
+        m3u_webroot = self.media_root_dir
+
         for file_entry in list:
             fullname = os.path.join(path, file_entry)
-            path_relative_to_webroot = fullname.replace(self.media_root_dir, "")
+            if m3u_webroot == '/':
+                path_relative_to_webroot = fullname
+            else:
+                path_relative_to_webroot = fullname.replace(m3u_webroot, "")
 
-            result.append((cgi.escape(file_entry), "http://{}:{}/{}".format(args.domain, args.port, quote(path_relative_to_webroot))))
+            result.append((cgi.escape(file_entry), "http://{}:{}{}".format(domain, args.port, quote(path_relative_to_webroot))))
 
         return result
 
@@ -401,7 +432,6 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
     def generate_m3u(self, path):
 
         path = path.replace(MEDIALIST_M3U, "")
-        # translated_path = self.translate_path(path)
 
         entries = self.__list_directory_bare(path)
 
@@ -410,12 +440,8 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
 
         entries = [(k, v) for k, v in entries if REGEX_MEDIA_FILE.search(k)]
 
-        print(entries)
         return """#EXTM3U
-#EXT-X-PLAYLIST-TYPE:VOD
-#EXT-X-TARGETDURATION:1
-#EXT-X-VERSION:3
-#EXT-X-MEDIA-SEQUENCE:0
+
 #EXTINF:1.0,""" + """#EXTINF:1.0,""".join((k + "\n" + v + "\n" for k, v in entries))
 
 
@@ -426,8 +452,14 @@ class ThreadedHTTPServer(SocketServer.ThreadingMixIn, HTTPServer):
         return "http://%s:%s" % threaded_server.server_address
 
 
+def get_file_size(path):
+    return pretty_size(os.path.getsize(path))
+
+
 def get_ip_address():
-    ips = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")] or [
+    ips = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if ip not in (
+        "127.0.0.1", "127.0.1.1", "0.0.0.0")
+           ] or [
         [(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in
          [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]
 
@@ -435,6 +467,34 @@ def get_ip_address():
         return ips[0]
     else:
         return '0.0.0.0'
+
+UNITS_MAPPING = [
+    (1024 ** 5, ' PB'),
+    (1024 ** 4, ' TB'),
+    (1024 ** 3, ' GB'),
+    (1024 ** 2, ' MB'),
+    (1024 ** 1, ' KB'),
+    (1024 ** 0, (' byte', ' bytes')),
+    ]
+
+
+def pretty_size(bytes, units=UNITS_MAPPING):
+    """Human-readable file sizes.
+    ripped from https://pypi.python.org/pypi/hurry.filesize/
+    """
+    for factor, suffix in units:
+        if bytes >= factor:
+            break
+    amount = int(bytes / factor)
+
+    if isinstance(suffix, tuple):
+        singular, multiple = suffix
+        if amount == 1:
+            suffix = singular
+        else:
+            suffix = multiple
+    return str(amount) + suffix
+
 
 if __name__ == '__main__':
 
@@ -458,6 +518,10 @@ if __name__ == '__main__':
                         help="don't automatically open the system web browser",
                         action='store_true',
                         default=False)
+    parser.add_argument('--suppress_size', '-s',
+                        help="DON'T show file size in file list",
+                        action='store_true',
+                        default=False)
 
     args = parser.parse_args(sys.argv[1:])
 
@@ -468,7 +532,7 @@ if __name__ == '__main__':
     url = "http://{}:{}".format(args.domain, args.port)
     print("Serving on {}".format(url))
 
-    if not args.no_browser and not os.uname()[4].startswith('arm'):
+    if not args.no_browser and not platform.machine() in ('arm', 'aarch64', 'armv7l'):
         open_url_in_browser(url)
 
     threaded_server.serve_forever()
