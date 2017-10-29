@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="author" content="info@xhumanoid.com">
         <title>Media Browser</title>
         <link rel="stylesheet" href="/lib/css/split-pane.css"/>
@@ -116,8 +117,45 @@
                 list-style: none;
                 padding: 0 .1em .1em .7em;
                 margin: 0;
-                display: block;
-                clear: both;
+            }
+
+            .preview {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-around;
+            }
+
+            .preview img {
+                max-width: 300px;
+                max-height: 200px;
+                width: auto;
+                height: auto;
+                margin: 0 auto;
+            }
+
+            .fileinfo {
+                display: -webkit-box;
+                display: -ms-flexbox;
+                display: flex;
+                align-items: baseline;
+                flex-wrap: nowrap;
+                flex-direction: row;
+                -webkit-box-pack: justify;
+                -ms-flex-pack: justify;
+                justify-content: space-between;
+            }
+
+            .size {
+                color: gray;
+                font-size: 90%;
+                font-stretch: ultra-condensed;
+                white-space: pre-line;
+                flex-shrink: 0;
+            }
+
+            .fname {
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             nav {
@@ -174,22 +212,6 @@
                 -moz-appearance: none;
                 appearance: none;
                 color: lightgray;
-            }
-
-            .preview {
-                display: block;
-                max-width: 300px;
-                max-height: 200px;
-                width: auto;
-                height: auto;
-                margin: 0 auto;
-            }
-
-            .size {
-                float: right;
-                color: gray;
-                font-size: 90%;
-                font-stretch: ultra-condensed;
             }
         </style>
         <script type="text/javascript">

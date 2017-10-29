@@ -331,8 +331,6 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
             _, extension = os.path.splitext(fullname)
             icon = (is_dir and ICON_DIR) or icons_by_type.get(extension.lower(), ICON_UNKNOWN)
 
-            file_type_marker = 'data-type="{type}"'.format(type=is_dir and 'dir' or 'file')
-
             if icon:
                 displayname = "{}&nbsp;{}".format(icon, cgi.escape(displayname))
 
@@ -346,16 +344,18 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
                 title = "{} [{}]".format(displayname, size)
 
                 if not args.suppress_size:
-                    size_info = '<span class="size">{}</span>'.format(size)
+                    size_info = size
 
             if re.search(REGEX_IMAGE_FILE, file_entry):
-                image_preview = '''<img class="preview" src="{link}{selector}">'''.format(
-                    link=quoted_link,
-                    selector=IMG_THUMBNAIL_SELECTOR)
+                image_preview = "{link}{selector}".format(link=quoted_link, selector=IMG_THUMBNAIL_SELECTOR)
 
-            result.append('<li><a {type} title="{title}" href="{link}">{preview}{name}</a>{size_info}\n'.format
-                          (type=file_type_marker,
-                           title=title,
+            result.append(
+                """<li>
+                    <a class="preview" title="{title}" href="{link}"><img src="{preview}"></a>
+                    <a class="fileinfo" title="{title}" href="{link}">
+                        <span class="fname">{name}</span>
+                        <span class="size">{size_info}</span>
+                    </a>\n""".format(title=title,
                            link=quoted_link,
                            preview=image_preview,
                            name=displayname,
