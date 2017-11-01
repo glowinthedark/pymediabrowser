@@ -1,7 +1,11 @@
 # Local Media Browser
 A local media browser app for navigating file systems that contain images, audio or video files, and displaying associated content such as PDF, HTML, or TXT. 
 
-The app is implemented as a tiny web server that opens a page in your browser with content split into a file navigation side panel, a media panel for video or audio, and a content panel for PDF and HTML.
+The primary use case is viewing audio or video files with associated notes in PDF, HTML or TXT format. Clicking a media file will open it in the preview panel and search for a matching PDF or HTML file with the same base name. If a matching content file was found it will be loaded in the preview panel below the media panel. You can define custom matching logic by adding the regular expression pair in `config.js`.
+
+For image files thumbnail previews are generated in the left navigation panel which makes it possible to use the app as a gallery viewer.
+
+The app is implemented as a tiny web server that opens a page in your browser with content split into a left navigation  panel, a media panel for video or audio, and a content panel for PDF and HTML.
 
 For displaying PDF files the browser must have the corresponding plugins — Chrome and Firefox support PDFs out of the box. For displaying PDF files in Internet Explorer, Adobe Reader or [Foxit Reader plugin](https://help.foxitsoftware.com/kb/how-to-configure-internet-explorer-to-use-foxit-pdf-plugin.php) must be installed.
 
