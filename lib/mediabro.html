@@ -244,7 +244,7 @@
                 var base_path = path.substring(0, path.lastIndexOf('.'));
 
                 // find first media link matching current URL
-                var matched = $("[href*='" + base_path + "']");
+                var matched = $("[href*='" + base_path + "' i]");
 
                 var media_entries = matched.filter(
                     function () {
@@ -272,7 +272,6 @@
                 }
 
                 $(document).keypress(function (e) {
-                    console.log(e, e.keyCode);
                     e.preventDefault();
                     if (e.keyCode === 32) {
                         if (audioplayer.is(':visible')) {
@@ -307,7 +306,6 @@
                     }
 
                     if (lnk.match(REGEX_TYPE_CONTENT)) {
-                        console.log('PDF::', lnk);
                         e.preventDefault();
                         isPdfDefined = true;
                         contentLink = lnk;
@@ -458,7 +456,6 @@
                     $scope.splitPaneProperties = {};
 
                     $scope.setFirstComponent = function (value) {
-                        console.log(value);
                         $scope.splitPaneProperties.firstComponentSize = value;
                     };
 

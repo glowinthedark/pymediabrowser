@@ -335,7 +335,7 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
                 displayname = "{}&nbsp;{}".format(icon, cgi.escape(displayname))
 
             size_info = ""
-            image_preview = ""
+            link_with_image_preview = ""
             title = displayname
 
             if not is_dir:
@@ -347,19 +347,24 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
                     size_info = size
 
             if re.search(REGEX_IMAGE_FILE, file_entry):
-                image_preview = "{link}{selector}".format(link=quoted_link, selector=IMG_THUMBNAIL_SELECTOR)
+                link_with_image_preview = """<a class="preview" title="{title}" href="{link}"><img src="{link}{selector}"></a>""".format(
+                    title=title,
+                    link=quoted_link,
+                    selector=IMG_THUMBNAIL_SELECTOR)
 
             result.append(
                 """<li>
-                    <a class="preview" title="{title}" href="{link}"><img src="{preview}"></a>
+                    {preview}
                     <a class="fileinfo" title="{title}" href="{link}">
                         <span class="fname">{name}</span>
                         <span class="size">{size_info}</span>
-                    </a>\n""".format(title=title,
-                           link=quoted_link,
-                           preview=image_preview,
-                           name=displayname,
-                           size_info=size_info))
+                    </a>\n""".format(
+                                     preview=link_with_image_preview,
+                                     title=title,
+                                     link=quoted_link,
+                                     name=displayname,
+                                     size_info=size_info)
+            )
 
         return '\n'.join(result)
 
@@ -406,8 +411,8 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
 
         """
         # abandon query parameters
-        path = path.split('?',1)[0]
-        path = path.split('#',1)[0]
+        path = path.split('?', 1)[0]
+        path = path.split('#', 1)[0]
         # Don't forget explicit trailing slash when normalizing. Issue17324
         trailing_slash = path.rstrip().endswith('/')
         path = posixpath.normpath(unquote(path))
