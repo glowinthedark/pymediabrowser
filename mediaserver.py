@@ -474,31 +474,23 @@ def get_ip_address():
         return '0.0.0.0'
 
 UNITS_MAPPING = [
-    (1024 ** 5, ' PB'),
-    (1024 ** 4, ' TB'),
-    (1024 ** 3, ' GB'),
-    (1024 ** 2, ' MB'),
-    (1024 ** 1, ' KB'),
-    (1024 ** 0, (' byte', ' bytes')),
+    (1 << 40, ' TB'),
+    (1 << 30, ' GB'),
+    (1 << 20, ' MB'),
+    (1 << 10, ' KB'),
+    (1, ' b'),
     ]
 
 
-def pretty_size(bytes, units=UNITS_MAPPING):
+def pretty_size(octets, units=UNITS_MAPPING):
     """Human-readable file sizes.
-    ripped from https://pypi.python.org/pypi/hurry.filesize/
+    simplified from from https://pypi.python.org/pypi/hurry.filesize/
     """
     for factor, suffix in units:
-        if bytes >= factor:
+        if octets >= factor:
             break
-    amount = int(bytes / factor)
 
-    if isinstance(suffix, tuple):
-        singular, multiple = suffix
-        if amount == 1:
-            suffix = singular
-        else:
-            suffix = multiple
-    return str(amount) + suffix
+    return str(int(octets / factor)) + suffix
 
 
 if __name__ == '__main__':

@@ -299,15 +299,9 @@
 
                     var isAudioDefined = false;
                     var isVideoDefined = false;
-                    var isPdfDefined = false;
-
-                    if (lnk.match(REGEX_TYPE_CONTENT_FULL_SCREEN)) {
-                        window.isMaximizedContent = true;
-                    }
 
                     if (lnk.match(REGEX_TYPE_CONTENT)) {
                         e.preventDefault();
-                        isPdfDefined = true;
                         contentLink = lnk;
 
                         var matched_file = findMatchingFileByExtension(lnk, REGEX_TYPE_AUDIO_VIDEO);
@@ -321,10 +315,6 @@
                                 isVideoDefined = true;
                             }
                         }
-                    }
-                    else if (lnk.match(REGEX_TYPE_CONTENT)) {
-                        e.preventDefault();
-                        contentLink = lnk;
                     }
                     else if (lnk.match(REGEX_TYPE_AUDIO)) {
                         isMediaLinkClick = true;
@@ -364,8 +354,6 @@
                                 .attr('src', mediaLnk)
                                 .attr('title', baseFile)
                                 .show();
-                            _scope.setFirstComponent(HEIGHT_AUDIO);
-                            _scope.$apply();
                         }
                     } else if (isVideoDefined) {
                         audioplayer.hide().attr('src', '');
@@ -375,10 +363,22 @@
                                 .attr('title', baseFile)
                                 .attr('src', mediaLnk)
                                 .show();
-                            _scope.setFirstComponent(HEIGHT_VIDEO);
-                            _scope.$apply();
                         }
                     }
+
+                    if (contentLink && mediaLnk) {
+                        if (isAudioDefined) {
+                            _scope.setFirstComponent(HEIGHT_AUDIO);
+                        } else if (isVideoDefined) {
+                            _scope.setFirstComponent(HEIGHT_VIDEO);
+                        }
+                    } else if (contentLink && !mediaLnk) {
+                        _scope.setFirstComponent(0);
+                    } else if (!contentLink) {
+                        _scope.setLastComponent(0);
+                    }
+
+                    _scope.$apply();
 
                     if (contentLink && contentPanel.attr('src') !== contentLink) {
                         contentPanel.attr('src', contentLink);
@@ -390,12 +390,6 @@
                 attachEventListeners();
 
                 $('#docview').load(function(e) {
-                    if (window.isMaximizedContent) {
-                        var _scope = angular.element($("[ng-controller]")).scope();
-                        _scope.setFirstComponent(0);
-                        _scope.$apply();
-                        window.isMaximizedContent = null;
-                    }
                     var docHead = $(e.target).contents().find("head");
                     docHead.append('<style type="text/css">body{height:100%; position:relative} body>img {display:block; text-align:center; position:absolute; max-width:100%; max-height:100%; margin:auto; top:0; bottom: 0; left:0; right: 0}</style>');
                 });
@@ -457,6 +451,10 @@
 
                     $scope.setFirstComponent = function (value) {
                         $scope.splitPaneProperties.firstComponentSize = value;
+                    };
+                    $scope.setLastComponent = function (value) {
+                        console.log(value);
+                        $scope.splitPaneProperties.lastComponentSize = value;
                     };
 
                     // playback speed options
