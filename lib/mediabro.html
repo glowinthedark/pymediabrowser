@@ -3,7 +3,7 @@
 	<head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="author" content="info@xhumanoid.com">
         <title>Media Browser</title>
@@ -106,9 +106,6 @@
             }
 
             * {
-                font-family: "Droid Sans", sans-serif;
-                font-size: 12pt;
-                line-height: 160%;
                 padding: 0;
                 margin: 0;
             }
@@ -117,20 +114,6 @@
                 list-style: none;
                 padding: 0 .1em .1em .7em;
                 margin: 0;
-            }
-
-            .preview {
-                display: flex;
-                flex-direction: row;
-                justify-content: space-around;
-            }
-
-            .preview img {
-                max-width: 300px;
-                max-height: 200px;
-                width: auto;
-                height: auto;
-                margin: 0 auto;
             }
 
             .fileinfo {
@@ -143,14 +126,17 @@
                 -webkit-box-pack: justify;
                 -ms-flex-pack: justify;
                 justify-content: space-between;
+                white-space: nowrap;
+                overflow: hidden;
             }
 
             .size {
                 color: gray;
                 font-size: 90%;
                 font-stretch: ultra-condensed;
-                white-space: pre-line;
                 flex-shrink: 0;
+                white-space: nowrap;
+                overflow: hidden;
             }
 
             .fname {
@@ -213,6 +199,51 @@
                 appearance: none;
                 color: lightgray;
             }
+
+            * {
+                font-family: "Droid Sans", sans-serif;
+                font-size: 12pt;
+                line-height: 160%;
+                padding: 0;
+                margin: 0;
+            }
+
+            /* http://jsfiddle.net/xLc2Le0k/15/
+            */
+            a.imglnk {
+                display: flex;
+                justify-content: space-around;
+            }
+
+            .preview img {
+                width: 100%;
+                min-width: 50px;
+            }
+
+            @media (min-width: 768px) {
+                .preview img {
+                    max-width: 300px;
+                }
+            }
+
+            @media only screen and (max-width: 767px) {
+                body {
+                    padding: 0;
+                    margin: 0;
+                }
+
+                * {
+                    font-family: "Droid Sans", sans-serif;
+                    font-size: 14pt;
+                    line-height: 160%;
+                    padding: 0;
+                    margin: 0;
+                }
+                .preview img {
+                    max-width: 400px;
+                }
+            }
+
         </style>
         <script type="text/javascript">
 

@@ -113,6 +113,7 @@ def open_url_in_browser(url):
 
 def make_thumbnail(image_path, size):
     img = Image.open(image_path)
+    img = fix_image_orientation(img)
     ''':type : PIL.Image'''
 
     if img.mode != 'RGB':
@@ -124,6 +125,21 @@ def make_thumbnail(image_path, size):
     img_io.seek(0)
     return img_io.getvalue()
 
+
+def fix_image_orientation(image):
+    for orientation in ExifTags.TAGS.keys():
+        if ExifTags.TAGS[orientation] == 'Orientation':
+            break
+    exif = dict(image._getexif().items())
+
+    if exif[orientation] == 3:
+        image = image.rotate(180, expand=True)
+    elif exif[orientation] == 6:
+        image = image.rotate(270, expand=True)
+    elif exif[orientation] == 8:
+        image = image.rotate(90, expand=True)
+
+    return image
 
 class MyRequestHandler(SimpleHTTPRequestHandler):
 
@@ -347,7 +363,12 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
                     size_info = size
 
             if re.search(REGEX_IMAGE_FILE, file_entry):
-                link_with_image_preview = """<a class="preview" title="{title}" href="{link}"><img src="{link}{selector}"></a>""".format(
+                link_with_image_preview = """
+        <a class="imglnk" title="{title}" href="{link}">
+            <div class="preview">
+                <img src="{link}{selector}">
+            </div>
+        </a>""".format(
                     title=title,
                     link=quoted_link,
                     selector=IMG_THUMBNAIL_SELECTOR)
@@ -358,7 +379,9 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
                     <a class="fileinfo" title="{title}" href="{link}">
                         <span class="fname">{name}</span>
                         <span class="size">{size_info}</span>
-                    </a>\n""".format(
+        </a>
+    </li>
+""".format(
                                      preview=link_with_image_preview,
                                      title=title,
                                      link=quoted_link,
