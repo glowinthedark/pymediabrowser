@@ -30,7 +30,7 @@ from SimpleHTTPServer import SimpleHTTPRequestHandler
 
 from StringIO import StringIO
 try:
-    from PIL import Image
+    from PIL import Image, ExifTags
 except ImportError:
     Image = None
 
@@ -132,12 +132,13 @@ def fix_image_orientation(image):
             break
     exif = dict(image._getexif().items())
 
-    if exif[orientation] == 3:
-        image = image.rotate(180, expand=True)
-    elif exif[orientation] == 6:
-        image = image.rotate(270, expand=True)
-    elif exif[orientation] == 8:
-        image = image.rotate(90, expand=True)
+    if exif:
+        if exif[orientation] == 3:
+            image = image.rotate(180, expand=True)
+        elif exif[orientation] == 6:
+            image = image.rotate(270, expand=True)
+        elif exif[orientation] == 8:
+            image = image.rotate(90, expand=True)
 
     return image
 
@@ -374,11 +375,10 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
                     selector=IMG_THUMBNAIL_SELECTOR)
 
             result.append(
-                """<li>
-                    {preview}
-                    <a class="fileinfo" title="{title}" href="{link}">
-                        <span class="fname">{name}</span>
-                        <span class="size">{size_info}</span>
+"""    <li>{preview}
+        <a class="fileinfo" title="{title}" href="{link}">
+            <span class="fname">{name}</span>
+            <span class="size">{size_info}</span>
         </a>
     </li>
 """.format(
@@ -488,13 +488,14 @@ def get_ip_address():
     ips = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if ip not in (
         "127.0.0.1", "127.0.1.1", "0.0.0.0")
            ] or [
-        [(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in
-         [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]
+              [(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in
+               [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]
 
     if len(ips):
         return ips[0]
     else:
         return '0.0.0.0'
+
 
 UNITS_MAPPING = [
     (1 << 40, ' TB'),
