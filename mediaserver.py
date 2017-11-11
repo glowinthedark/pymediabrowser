@@ -60,6 +60,8 @@ icons_by_type = {
     '.3gpp': ICON_VIDEO,
     '.webm': ICON_VIDEO,
     '.html': ICON_HTML,
+    '.htm': ICON_HTML,
+    '.mhtm': ICON_HTML,
     '.jpg': ICON_IMAGE,
     '.jpeg': ICON_IMAGE,
     '.png': ICON_IMAGE,
@@ -127,22 +129,24 @@ def make_thumbnail(image_path, size):
 
 
 def fix_image_orientation(image):
-    for orientation in ExifTags.TAGS.keys():
-        if ExifTags.TAGS[orientation] == 'Orientation':
-            break
-    exif = image._getexif()
+    if hasattr(image, '_getexif'):  # only present in JPEGs
+        for orientation in ExifTags.TAGS.keys():
+            if ExifTags.TAGS[orientation] == 'Orientation':
+                break
+        exif = image._getexif()
 
-    if exif:
-        exif_items = dict(exif.items())
+        if exif:
+            exif_items = dict(exif.items())
 
-        if exif_items:
-            orientation_ = exif_items[orientation]
-            if orientation_ == 3:
-                image = image.rotate(180, expand=True)
-            elif orientation_ == 6:
-                image = image.rotate(270, expand=True)
-            elif orientation_ == 8:
-                image = image.rotate(90, expand=True)
+            if exif_items:
+                    orientation_ = exif_items.get(orientation, None)
+
+                    if orientation_ == 3:
+                            image = image.transpose(Image.ROTATE_180, expand=True)
+                    elif orientation_ == 6:
+                            image = image.transpose(Image.ROTATE_270, expand=True)
+                    elif orientation_ == 8:
+                            image = image.transpose(Image.ROTATE_90, expand=True)
 
     return image
 
