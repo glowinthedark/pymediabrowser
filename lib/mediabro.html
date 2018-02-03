@@ -302,16 +302,27 @@
                     });
                 }
 
-                $(document).keypress(function (e) {
+                // handle arrow keys and space
+                $(document).keydown(function (e) {
                     e.preventDefault();
-                    if (e.keyCode === 32) {
-                        if (audioplayer.is(':visible')) {
-                            var a = audioplayer.get(0);
-                            a.paused ? a.play() : a.pause();
-                        } else if (videoplayer.is(':visible')) {
-                            var v = videoplayer.get(0);
-                            v.paused ? v.play() : v.pause();
-                        }
+
+                    var player = (audioplayer.is(':visible') ? audioplayer: videoplayer).get(0);
+
+                    switch (e.keyCode) {
+                        case 37: // left
+                            player.currentTime = player.currentTime - 5;
+                            break;
+                        case 38: // up
+                            player.currentTime = player.currentTime + 30;
+                            break;
+                        case 39: //  right
+                            player.currentTime = player.currentTime + 5;
+                            break;
+                        case 40: // down
+                            player.currentTime = player.currentTime - 30;
+                            break;
+                        case 32: // space
+                            player.paused ? player.play() : player.pause();
                     }
                 });
 

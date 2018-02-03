@@ -413,7 +413,7 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
         domain = args.domain
 
         # for M3U playlists use the LAN IP
-        if domain.startswith('0.') or domain.startswith('127.'):
+        if domain.startswith(('0.', '127.')):
             domain = get_ip_address()
 
         m3u_webroot = self.media_root_dir
