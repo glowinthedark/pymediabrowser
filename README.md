@@ -30,6 +30,17 @@ Playback of media files is handled by the web browser therefore support is limit
 
 For more details refer to [mozilla browser media compatibility table](https://developer.mozilla.org/en-US/docs/Web/HTML/Supported_media_formats#Browser_compatibility).
 
+## Keyboard navigation shortcuts
+
+| Key press  | Action |
+| ------------- | ------------- |
+| Left  | Seek backward 5 sec  |
+| Right  | Seek forward 5 sec  |
+| Up  | Seek forward 1 min  |
+| Down  | Seek backward 1 min  |
+| Space  | Pause/Play  |
+| f  | Toggle full screen  |
+
 ## Download
 Prebuilt (possibly outdated) packages for MacOS and Windows can be downloaded from the [Releases](https://github.com/elFua/local-media-browser/releases) section.
 
