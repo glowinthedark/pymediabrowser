@@ -302,27 +302,39 @@
                     });
                 }
 
-                // handle arrow keys and space
+                // handle key navigation
                 $(document).keydown(function (e) {
-                    e.preventDefault();
+                    var p = (audioplayer.is(':visible') ? audioplayer: videoplayer).get(0);
 
-                    var player = (audioplayer.is(':visible') ? audioplayer: videoplayer).get(0);
-
-                    switch (e.keyCode) {
+                    switch (e.which) {
                         case 37: // left
-                            player.currentTime = player.currentTime - 5;
+                            p.currentTime = p.currentTime - 5;
                             break;
                         case 38: // up
-                            player.currentTime = player.currentTime + 30;
+                            p.currentTime = p.currentTime + 30;
                             break;
                         case 39: //  right
-                            player.currentTime = player.currentTime + 5;
+                            p.currentTime = p.currentTime + 5;
                             break;
                         case 40: // down
-                            player.currentTime = player.currentTime - 30;
+                            p.currentTime = p.currentTime - 30;
                             break;
                         case 32: // space
-                            player.paused ? player.play() : player.pause();
+                            p.paused ? p.play() : p.pause();
+                            break;
+                        case 70: // f-key
+                            if (!(e.shiftKey || e.ctrlKey || e.altKey || e.metaKey)) {
+                                if (!window.isFs) {
+                                    window.isFs = true;
+                                    var fs = p.requestFullscreen || p.webkitRequestFullscreen || p.mozRequestFullScreen || p.oRequestFullscreen || p.msRequestFullscreen;
+                                    fs.call(p);
+                                } else {
+                                    window.isFs = false;
+                                    var fsx = p.exitFullScreen || p.webkitExitFullScreen || p.mozExitFullScreen || p.oExitFullScreen || p.msExitFullScreen;
+                                    fsx.call(p);
+                                }
+                            }
+                            break;
                     }
                 });
 
