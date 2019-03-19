@@ -264,17 +264,23 @@
                 for (var i = 0, len = URL_TRANSFORMATIONS.length; i < len; i++) {
                     var item = URL_TRANSFORMATIONS[i];
 
-                    var matcher = item[0].exec(path);
+                    var pathUnescaped = decodeURIComponent(path);
+                    var matcher = item[0].exec(pathUnescaped);
 
                     if(matcher) {
-                        return path.replace(item[0], item[1]);
+                        return encodeURIComponent(pathUnescaped.replace(item[0], item[1]));
                     }
+                }
+
+                // special case for mandarin-corner
+                if (/.*mandarin-corner.*/.test(document.location.href)) {
+                    path = path.replace(/-/g, '%20');
                 }
 
                 // remove extension
                 var base_path = path.substring(0, path.lastIndexOf('.'));
 
-                // find first media link matching current URL
+                // find first media link fuzzy matching current URL
                 var matched = $("[href*='" + base_path + "' i]");
 
                 var media_entries = matched.filter(
@@ -287,6 +293,20 @@
                     var media_entry = media_entries[0];
                     return media_entry.href ? media_entry.href : media_entry;
                 }
+            }
+
+            function isValidUrl(url) {
+                var isOk = false;
+                $.ajax({
+                    type: "HEAD",
+                    async: false,
+                    cache: false,
+                    url: url
+                }).success(function(message,text,jqXHR){
+                    isOk = true;
+                });
+
+                return isOk;
             }
 
             function attachEventListeners() {
@@ -347,6 +367,11 @@
                         .css({'color': '#ff7d12', 'font-weight': 'bold'})
                         .attr('href');
 
+                    document.title = decodeURIComponent(lnk);
+
+                    if (this.dataset.type === 'file') {
+                        document.location.hash = lnk;
+                    }
                     var mediaLnk;
                     var contentLink; // PDF or any other text file to be loaded into the frame
                     var isMediaLinkClick;
@@ -403,10 +428,10 @@
                     if (isAudioDefined) {
                         videoplayer.hide().attr('src', '');
 
-                        if (audioplayer.attr('src') !== mediaLnk) {
+                        if (audioplayer.attr('src') !== mediaLnk && isValidUrl(mediaLnk)) {
                             audioplayer
                                 .attr('src', mediaLnk)
-                                .attr('title', baseFile)
+                                .attr('title', decodeURIComponent(baseFile))
                                 .show();
                         }
                     } else if (isVideoDefined) {
@@ -414,7 +439,7 @@
 
                         if (videoplayer.attr('src') !== mediaLnk) {
                             videoplayer
-                                .attr('title', baseFile)
+                                .attr('title', decodeURIComponent(baseFile))
                                 .attr('src', mediaLnk)
                                 .show();
                         }
@@ -434,7 +459,7 @@
 
                     _scope.$apply();
 
-                    if (contentLink && contentPanel.attr('src') !== contentLink) {
+                    if (contentLink && contentPanel.attr('src') !== contentLink &&  isValidUrl(contentLink)) {
                         contentPanel.attr('src', contentLink);
                     }
                 });

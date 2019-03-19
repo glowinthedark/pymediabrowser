@@ -36,7 +36,7 @@ except ImportError:
 
 # https://emojipedia.org/
 
-VERSION = '8088.11'
+VERSION = '8088.903'
 
 DEFAULT_PORT = 8088
 
@@ -54,6 +54,7 @@ icons_by_type = {
     '.pdf': ICON_PDF,
     '.mp3': ICON_AUDIO,
     '.mp4': ICON_VIDEO,
+    '.vob': ICON_VIDEO,
     '.m4v': ICON_VIDEO,
     '.mov': ICON_VIDEO,
     '.3gp': ICON_VIDEO,
@@ -84,7 +85,7 @@ IMG_THUMBNAIL_SELECTOR = '?mediabro-thumb.jpg'
 
 REGEX_BYTE_RANGE = re.compile(r'bytes=(\d+)-(\d+)?$')
 REGEX_INTERNAL_FILE = re.compile("^/lib/(css|js|ico)/.*\.(css|js|png|ico|xml|json)$", re.IGNORECASE)
-REGEX_MEDIA_FILE = re.compile("\.(3gp|3gpp|aac|aiff|avi|mov|mp1|mp2|mp3|mp4|m4a|flac|m4v|mpeg|mpg|oga|ogg|ogv|ogm|wav|webm|wma|wmv)$", re.IGNORECASE)
+REGEX_MEDIA_FILE = re.compile("\.(3gp|3gpp|aac|aiff|avi|mov|mp1|mp2|mp3|mp4|m4a|vob|mkv|flac|m4v|mpeg|mpg|oga|ogg|ogv|ogm|wav|webm|wma|wmv)$", re.IGNORECASE)
 REGEX_IMAGE_FILE = re.compile("\.(gif|jpg|jpeg|apng|png|tif|tiff|bmp|eps|pcx|webp|ico|icns|psd|xpm|wmf)$", re.IGNORECASE)
 
 
@@ -384,12 +385,13 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
 
             result.append(
 """    <li>{preview}
-        <a class="fileinfo" title="{title}" href="{link}">
+        <a class="fileinfo" data-type="{ftype}" title="{title}" href="{link}">
             <span class="fname">{name}</span>
             <span class="size">{size_info}</span>
         </a>
     </li>
 """.format(
+                                     ftype=is_dir and 'dir' or 'file',
                                      preview=link_with_image_preview,
                                      title=title,
                                      link=quoted_link,
@@ -489,7 +491,11 @@ class ThreadedHTTPServer(SocketServer.ThreadingMixIn, HTTPServer):
 
 
 def get_file_size(path):
+    try:
     return pretty_size(os.path.getsize(path))
+    except Exception as e:
+        print(e)
+        return '&#x2757;'
 
 
 def get_ip_address():
