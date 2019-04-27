@@ -42,7 +42,7 @@ For more details refer to [mozilla browser media compatibility table](https://de
 | f  | Toggle full screen  |
 
 ## Download
-Prebuilt (possibly outdated) packages for MacOS and Windows can be downloaded from the [Releases](https://github.com/elFua/local-media-browser/releases) section.
+Prebuilt (possibly outdated) packages for MacOS and Windows can be downloaded from the [Releases](https://github.com/glowinthedark/local-media-browser/releases) section.
 
 To run on Linux follow the Usage steps below.
 
