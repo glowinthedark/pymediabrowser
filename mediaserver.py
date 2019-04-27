@@ -259,7 +259,6 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
 
         print(self.path)
-        print(self.version_string())
 
         absolute_path = os.path.join(self.media_root_dir, unquote(self.path[1:]))
 
@@ -492,7 +491,7 @@ class ThreadedHTTPServer(SocketServer.ThreadingMixIn, HTTPServer):
 
 def get_file_size(path):
     try:
-    return pretty_size(os.path.getsize(path))
+        return pretty_size(os.path.getsize(path))
     except Exception as e:
         print(e)
         return '&#x2757;'
