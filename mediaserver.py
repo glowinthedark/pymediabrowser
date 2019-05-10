@@ -55,6 +55,7 @@ icons_by_type = {
     '.mp3': ICON_AUDIO,
     '.mp4': ICON_VIDEO,
     '.vob': ICON_VIDEO,
+    '.mkv': ICON_VIDEO,
     '.m4v': ICON_VIDEO,
     '.mov': ICON_VIDEO,
     '.3gp': ICON_VIDEO,
@@ -110,6 +111,7 @@ def open_url_in_browser(url):
                 return
             except Exception as e:
                 print(e)
+                sys.stdout.flush()
     else:
         webbrowser.open_new_tab(url)
 
@@ -131,6 +133,7 @@ def make_thumbnail(image_path, size):
 
 def fix_image_orientation(image):
     if hasattr(image, '_getexif'):  # only present in JPEGs
+
         for orientation in ExifTags.TAGS.keys():
             if ExifTags.TAGS[orientation] == 'Orientation':
                 break
@@ -140,14 +143,14 @@ def fix_image_orientation(image):
             exif_items = dict(exif.items())
 
             if exif_items:
-                    orientation_ = exif_items.get(orientation, None)
+                orientation_ = exif_items.get(orientation, None)
 
-                    if orientation_ == 3:
-                            image = image.transpose(Image.ROTATE_180, expand=True)
-                    elif orientation_ == 6:
-                            image = image.transpose(Image.ROTATE_270, expand=True)
-                    elif orientation_ == 8:
-                            image = image.transpose(Image.ROTATE_90, expand=True)
+                if orientation_ == 3:
+                    image = image.transpose(Image.ROTATE_180, expand=True)
+                elif orientation_ == 6:
+                    image = image.transpose(Image.ROTATE_270, expand=True)
+                elif orientation_ == 8:
+                    image = image.transpose(Image.ROTATE_90, expand=True)
 
     return image
 
@@ -259,6 +262,8 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
 
         print(self.path)
+        print(self.version_string())
+        sys.stdout.flush()
 
         absolute_path = os.path.join(self.media_root_dir, unquote(self.path[1:]))
 
@@ -320,13 +325,15 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
 
         """
         try:
-            list = os.listdir(path)
+            file_list = os.listdir(path)
+            if '?show=all' not in self.path:
+                file_list = [f for f in file_list if not f.startswith('.')]
         except os.error:
             self.send_error(404, "No permission to list directory")
             return None
 
         # sort file list with folders first
-        list.sort(key=lambda a: (not os.path.isdir(os.path.join(path, a)), a.lower()))
+        file_list.sort(key=lambda a: (not os.path.isdir(os.path.join(path, a)), a.lower()))
         result = ['''
     <nav>
         <div class="inlined btn-back">
@@ -339,7 +346,7 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
     <div style="clear:both"></div>
 <ul>'''.format(ICON_BACK, MEDIALIST_M3U)]
 
-        for file_entry in list:
+        for file_entry in file_list:
             fullname = os.path.join(path, file_entry)
             displayname = linkname = file_entry
             # Append / for directories or @ for symbolic links
@@ -494,6 +501,7 @@ def get_file_size(path):
         return pretty_size(os.path.getsize(path))
     except Exception as e:
         print(e)
+        sys.stdout.flush()
         return '&#x2757;'
 
 
@@ -507,11 +515,11 @@ def get_ip_address():
 
         if len(ips):
             return ips[0]
-        else:
-            return '0.0.0.0'
     except Exception as e:
         print(e)
-        return '0.0.0.0'
+        sys.stdout.flush()
+
+    return '0.0.0.0'
 
 UNITS_MAPPING = [
     (1 << 40, ' TB'),
@@ -568,6 +576,7 @@ if __name__ == '__main__':
     print(threaded_server)
     url = "http://{}:{}".format(args.domain, args.port)
     print("Serving on {}".format(url))
+    sys.stdout.flush()
 
     if not args.no_browser and not platform.machine() in ('arm', 'aarch64', 'armv7l'):
         open_url_in_browser(url)

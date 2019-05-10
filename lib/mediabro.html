@@ -258,6 +258,13 @@
             var HEIGHT_AUDIO = 32;
             var HEIGHT_VIDEO = 500;
 
+            function playNext(e) {
+                var href = lastClicked.attr('href');
+                if (AUTO_PLAY_NEXT && (REGEX_TYPE_AUDIO.test(href) || REGEX_TYPE_VIDEO.test(href))) {
+                    lastClicked.closest('li').next('li').find('a').click();
+                }
+            }
+
             function findMatchingFileByExtension(path, extension_regex) {
 
                 // handle special cases
@@ -267,7 +274,7 @@
                     var pathUnescaped = decodeURIComponent(path);
                     var matcher = item[0].exec(pathUnescaped);
 
-                    if(matcher) {
+                    if (matcher) {
                         return encodeURIComponent(pathUnescaped.replace(item[0], item[1]));
                     }
                 }
@@ -360,6 +367,8 @@
 
                 // href clicks
                 $('a').click(function (e) {
+                    // store the link for playNext()
+                    window.lastClicked = $(e.target).closest('a');
 
                     $('a').css({'color': '', 'font-style': ''});
 
@@ -495,7 +504,7 @@
             <div data-split-pane data-split-pane-properties="splitPaneProperties">
                 <div data-split-pane-component data-height="32px">
                     <div class="pretty-split-pane-component-inner media-pane">
-                        <audio style="display:none" id="audioplayer" autoplay controls>
+                        <audio onended="playNext();" style="display:none" id="audioplayer" autoplay controls>
                         </audio>
                         <select id="playbackSpeed"
                                 name="playbackSpeed"
@@ -504,7 +513,7 @@
                                 ng-change="setPlaybackRate(this)">
                         </select>
 
-                        <video style="display:none" id="videoplayer" autoplay controls>
+                        <video onended="playNext();" style="display:none" id="videoplayer" autoplay controls>
                         </video>
                     </div>
                 </div>

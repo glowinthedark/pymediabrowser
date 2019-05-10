@@ -1,3 +1,5 @@
+AUTO_PLAY_NEXT = true;
+
 URL_TRANSFORMATIONS = [
     // LINK REGEX                                        MATCHING LINK REPLACEMENT
     [/clo_(\d{3}).*\.mp3/i,                              "../PDF/CLO_$1_Vocab.pdf"],
