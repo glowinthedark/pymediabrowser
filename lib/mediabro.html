@@ -322,15 +322,20 @@
                 window.videoplayer = $('#videoplayer');
                 var contentPanel = $('#docview');
 
-                // video play/pause on click
-                if (navigator.userAgent.toLowerCase().indexOf('firefox') == -1) {
-                    videoplayer.click(function () {
+                // video play/pause on click (firefox and safari already do this OOTB)
+                if (!window.safari && !window.netscape) {
+                    videoplayer.click(function (e) {
+                        // console.log(e);
                         this.paused ? this.play() : this.pause();
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
                     });
                 }
 
                 // handle key navigation
-                $(document).keydown(function (e) {
+                document.onkeydown = function (e) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
                     var p = (audioplayer.is(':visible') ? audioplayer: videoplayer).get(0);
 
                     switch (e.which) {
@@ -347,7 +352,10 @@
                             p.currentTime = p.currentTime - 60;
                             break;
                         case 32: // space
-                            p.paused ? p.play() : p.pause();
+                            // chrome OOTB handles play/pause on space when the element is focused
+                            if (!window.chrome || document.activeElement != p) {
+                                p.paused ? p.play() : p.pause();
+                            }
                             break;
                         case 70: // f-key
                             if (!(e.shiftKey || e.ctrlKey || e.altKey || e.metaKey)) {
@@ -363,7 +371,7 @@
                             }
                             break;
                     }
-                });
+                };
 
                 // href clicks
                 $('a').click(function (e) {
