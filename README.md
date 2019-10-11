@@ -1,4 +1,4 @@
-# Local Media Browser
+# PyMediaCenter
 A local media browser app for navigating file systems that contain images, audio or video files, and displaying associated content such as PDF, HTML, or TXT. 
 
 The primary use case is viewing audio or video files with associated notes in PDF, HTML or TXT format. Clicking a media file will open it in the preview panel and search for a matching PDF or HTML file with the same base name. If a matching content file was found it will be loaded in the preview panel below the media panel. You can define custom matching logic by adding the regular expression pair in `config.js`.
