@@ -1,3 +1,8 @@
+```diff
+! This project is deprecated and not maintained. It has been migrated to a caddyserver-based model.
+```
+> ### Superceded by 👉 [MediaBro4caddy](/glowinthedark/mediabro4caddy)
+
 # PyMediaCenter
 A local media browser app for navigating file systems that contain images, audio or video files, and displaying associated content such as PDF, HTML, or TXT. 
 
