@@ -16,6 +16,9 @@ The app is based on Python's SimpleHTTPServer web server with a browser-based HT
 
 For displaying PDF files the browser must have the corresponding plugins — Chrome and Firefox support PDFs out of the box. For displaying PDF files in Internet Explorer, Adobe Reader or [Foxit Reader plugin](https://help.foxitsoftware.com/kb/how-to-configure-internet-explorer-to-use-foxit-pdf-plugin.php) has to be installed.
 
+![pymediabrowser](mediabrowser.png?raw=true "pymediabrowser UI")
+
+
 #### Features:
 
 * browsing audio, video, text, and images with thumbnail previews
