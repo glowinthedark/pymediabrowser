@@ -1,5 +1,5 @@
 ```diff
-! This project is deprecated and not maintained. It has been migrated to a caddyserver-based model.
+! This project is unmaintained.
 ```
 > ### Superceded by 👉 [MediaBro4caddy](https://github.com/glowinthedark/mediabro4caddy)
 
