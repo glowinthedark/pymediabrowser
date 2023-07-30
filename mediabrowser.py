@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding=utf-8
 
 #  Copyright (c) 2017 glowinthedark
@@ -12,23 +12,23 @@
 
 # Thanks to:
 # Dan Vanderkam for RangeHTTPServer - https://github.com/danvk/RangeHTTPServer
-#
+
 import argparse
-import re
-import socket
-import webbrowser
-from string import Template
-from urllib import quote, unquote
-import SocketServer
-import cgi
+import html
 import os
 import platform
 import posixpath
+import re
+import socket
+import socketserver
 import sys
-from BaseHTTPServer import HTTPServer
-from SimpleHTTPServer import SimpleHTTPRequestHandler
+import webbrowser
+from http.server import HTTPServer
+from http.server import SimpleHTTPRequestHandler
+from io import BytesIO
+from string import Template
+from urllib.parse import unquote, quote
 
-from StringIO import StringIO
 try:
     from PIL import Image, ExifTags
 except ImportError:
@@ -36,46 +36,120 @@ except ImportError:
 
 # https://emojipedia.org/
 
-VERSION = '8088.903'
+VERSION = 'v110.72913'
 
 DEFAULT_PORT = 8088
 
-ICON_AUDIO = "&#x1F3A7;"
-ICON_VIDEO = "&#x1F3A5;"
-ICON_PDF = "&#128195;"
-ICON_DIR = "&#128193;"
-ICON_HTML = "&#x1F30D;"
-ICON_IMAGE = "&#xFE0F;"
-ICON_UNKNOWN = "&#x2753;"
-ICON_BACK = "&#x21B0;"
-ICON_TEXT = "&#x1F4C3;"
+# ICON_AUDIO = "&#x1F3A7;"
+# ICON_VIDEO = "&#x1F3A5;"
+# ICON_PDF = "&#128195;"
+# ICON_DIR = "&#128193;"
+# ICON_HTML = "&#x1F30D;"
+# ICON_IMAGE = "&#xFE0F;"
+# ICON_UNKNOWN = "&#x2753;"
+# ICON_BACK = "&#x21B0;"
+# ICON_TEXT = "&#x1F4C3;"
 
-icons_by_type = {
-    '.pdf': ICON_PDF,
-    '.mp3': ICON_AUDIO,
-    '.mp4': ICON_VIDEO,
-    '.vob': ICON_VIDEO,
-    '.mkv': ICON_VIDEO,
-    '.m4v': ICON_VIDEO,
-    '.mov': ICON_VIDEO,
-    '.3gp': ICON_VIDEO,
-    '.3gpp': ICON_VIDEO,
-    '.webm': ICON_VIDEO,
-    '.html': ICON_HTML,
-    '.htm': ICON_HTML,
-    '.mhtm': ICON_HTML,
-    '.jpg': ICON_IMAGE,
-    '.jpeg': ICON_IMAGE,
-    '.png': ICON_IMAGE,
-    '.gif': ICON_IMAGE,
-    '.webp': ICON_IMAGE,
-    '.txt': ICON_TEXT,
-    '.srt': ICON_TEXT,
-    '.ini': ICON_TEXT,
-    '.cfg': ICON_TEXT,
-    '.conf': ICON_TEXT,
-    '.vimrc': ICON_TEXT,
-    '.bashrc': ICON_TEXT,
+ICON_AUDIO = "&#x1F3A7;"  # 🎧
+ICON_VIDEO = "&#x1F3A5;"  # 🎥
+ICON_PDF = "&#128195;"  # 📃
+ICON_DIR = "&#128193;"  # 📁
+ICON_HTML = "&#x1F30D;"  # 🌍
+ICON_IMAGE = "&#x1F305;"  # 🌅
+ICON_UNKNOWN = "&#x2753;"  # ❓
+ICON_BACK = "&#x21B0;"  # ↰
+ICON_TEXT = "&#x1F4C3;"  # 📃
+ICON_MISC = "&#x1F9E9;"  # 🧩
+ICON_MARKDOWN = "&#x1F17C;"  # 🅼
+
+ICONS_BY_TYPE = {
+    'pdf': ICON_PDF,
+
+    'aac': ICON_AUDIO,
+    'ape': ICON_AUDIO,
+    'flac': ICON_AUDIO,
+    'm4a': ICON_AUDIO,
+    'mp3': ICON_AUDIO,
+    'oga': ICON_AUDIO,
+    'ogg': ICON_AUDIO,
+    'wav': ICON_AUDIO,
+
+    '3gp': ICON_VIDEO,
+    '3gpp': ICON_VIDEO,
+    'm4v': ICON_VIDEO,
+    'mkv': ICON_VIDEO,
+    'mov': ICON_VIDEO,
+    'mp4': ICON_VIDEO,
+    'ogm': ICON_VIDEO,
+    'ogv': ICON_VIDEO,
+    'opus': ICON_VIDEO,
+    'vob': ICON_VIDEO,
+    'webm': ICON_VIDEO,
+
+    'asp': ICON_HTML,
+    'htm': ICON_HTML,
+    'html': ICON_HTML,
+    'mhtm': ICON_HTML,
+    'php': ICON_HTML,
+
+    'bmp': ICON_IMAGE,
+    'gif': ICON_IMAGE,
+    'heic': ICON_IMAGE,
+    'jpeg': ICON_IMAGE,
+    'jpg': ICON_IMAGE,
+    'png': ICON_IMAGE,
+    'svg': ICON_IMAGE,
+    'webp': ICON_IMAGE,
+
+    'md': ICON_MARKDOWN,
+
+    'cfg': ICON_TEXT,
+    'ics': ICON_TEXT,
+    'ini': ICON_TEXT,
+    'log': ICON_TEXT,
+    'rst': ICON_TEXT,
+    'srt': ICON_TEXT,
+    'txt': ICON_TEXT,
+    'vtt': ICON_TEXT,
+    'cue': ICON_TEXT,
+
+    'bat': ICON_MISC,
+    'c': ICON_MISC,
+    'conf': ICON_MISC,
+    'cpp': ICON_MISC,
+    'cs': ICON_MISC,
+    'css': ICON_MISC,
+    'dart': ICON_MISC,
+    'go': ICON_MISC,
+    'gradle': ICON_MISC,
+    'groovy': ICON_MISC,
+    'h': ICON_MISC,
+    'hpp': ICON_MISC,
+    'ipynb': ICON_MISC,
+    'java': ICON_MISC,
+    'js': ICON_MISC,
+    'json': ICON_MISC,
+    'kt': ICON_MISC,
+    'lua': ICON_MISC,
+    'm': ICON_MISC,
+    'm3u': ICON_MISC,
+    'm3u8': ICON_MISC,
+    'pl': ICON_MISC,
+    'plist': ICON_MISC,
+    'properties': ICON_MISC,
+    'py': ICON_MISC,
+    'rb': ICON_MISC,
+    'rs': ICON_MISC,
+    'scss': ICON_MISC,
+    'sh': ICON_MISC,
+    'sql': ICON_MISC,
+    'swift': ICON_MISC,
+    'ts': ICON_MISC,
+    'tsx': ICON_MISC,
+    'xml': ICON_MISC,
+    'yaml': ICON_MISC,
+    'yml': ICON_MISC,
+    'zsh': ICON_MISC,
 }
 
 # bytes in a megabyte; for displaying friendly file sizes
@@ -85,7 +159,7 @@ MEDIALIST_M3U = 'medialist.m3u'
 IMG_THUMBNAIL_SELECTOR = '?mediabro-thumb.jpg'
 
 REGEX_BYTE_RANGE = re.compile(r'bytes=(\d+)-(\d+)?$')
-REGEX_INTERNAL_FILE = re.compile("^/lib/(css|js|ico)/.*\.(css|js|png|ico|xml|json)$", re.IGNORECASE)
+REGEX_INTERNAL_FILE = re.compile("^/(css|js|ico)/.*\.(css|js|png|ico|xml|json)$", re.IGNORECASE)
 REGEX_MEDIA_FILE = re.compile("\.(3gp|3gpp|aac|aiff|avi|mov|mp1|mp2|mp3|mp4|m4a|vob|mkv|flac|m4v|mpeg|mpg|oga|ogg|ogv|ogm|wav|webm|wma|wmv)$", re.IGNORECASE)
 REGEX_IMAGE_FILE = re.compile("\.(gif|jpg|jpeg|apng|png|tif|tiff|bmp|eps|pcx|webp|ico|icns|psd|xpm|wmf)$", re.IGNORECASE)
 
@@ -125,7 +199,7 @@ def make_thumbnail(image_path, size):
         img = img.convert('RGB')
 
     img.thumbnail(size)
-    img_io = StringIO()
+    img_io = BytesIO()
     img.save(img_io, 'JPEG', quality=50)
     img_io.seek(0)
     return img_io.getvalue()
@@ -134,31 +208,47 @@ def make_thumbnail(image_path, size):
 def fix_image_orientation(image):
     if hasattr(image, '_getexif'):  # only present in JPEGs
 
-        for orientation in ExifTags.TAGS.keys():
-            if ExifTags.TAGS[orientation] == 'Orientation':
-                break
-        exif = image._getexif()
-
-        if exif:
-            exif_items = dict(exif.items())
-
-            if exif_items:
-                orientation_ = exif_items.get(orientation, None)
-
-                if orientation_ == 3:
-                    image = image.transpose(Image.ROTATE_180, expand=True)
-                elif orientation_ == 6:
-                    image = image.transpose(Image.ROTATE_270, expand=True)
-                elif orientation_ == 8:
-                    image = image.transpose(Image.ROTATE_90, expand=True)
+        try:
+            exif = image._getexif()
+            orientation = exif[274]
+            if orientation in (2, '2'):
+                return image.transpose(Image.FLIP_LEFT_RIGHT)
+            elif orientation in (3, '3'):
+                return image.transpose(Image.ROTATE_180)
+            elif orientation in (4, '4'):
+                return image.transpose(Image.FLIP_TOP_BOTTOM)
+            elif orientation in (5, '5'):
+                return image.transpose(Image.ROTATE_90).transpose(Image.FLIP_TOP_BOTTOM)
+            elif orientation in (6, '6'):
+                return image.transpose(Image.ROTATE_270)
+            elif orientation in (7, '7'):
+                return image.transpose(Image.ROTATE_270).transpose(Image.FLIP_TOP_BOTTOM)
+            elif orientation in (8, '8'):
+                return image.transpose(Image.ROTATE_90)
+            else:
+                return image
+        except (KeyError, AttributeError, TypeError, IndexError):
+            return image
 
     return image
 
+
 class MyRequestHandler(SimpleHTTPRequestHandler):
+    #
+    # def end_headers(self):
+    #     # Disable output buffering
+    #     self.server.wsgi_output = False
+    #     super().end_headers()
+
+    def handle(self):
+        try:
+            SimpleHTTPRequestHandler.handle(self)
+        except Exception as e:
+            pass
 
     def __init__(self, request, client_address, server):
         self.media_root_dir = args.webroot
-        template_path = os.path.join(get_script_dir(), "lib", "mediabro.html")
+        template_path = os.path.join(get_script_dir(), "mediabro.html")
 
         html_content = open(template_path).read()
 
@@ -187,6 +277,11 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
         path = self.translate_path(self.path)
         f = None
         ctype = self.guess_type(path)
+
+        ## override for php
+        if 'php' in path.lower():
+            ctype = 'text/plain'
+
         try:
             f = open(path, 'rb')
         except IOError:
@@ -201,7 +296,8 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
 
         self.send_response(206)
         self.send_header('Content-type', ctype)
-        self.send_header('Accept-Ranges', 'bytes')
+
+        self.send_header("Access-Control-Allow-Origin", "*")
 
         if last is None or last >= file_len:
             last = file_len - 1
@@ -214,8 +310,11 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         return f
 
-
     #  START BYTE RANGE SUPPORT (https://github.com/danvk/RangeHTTPServer)
+
+    def end_headers(self) -> None:
+        self.send_header('Accept-Ranges', 'bytes')
+        return SimpleHTTPRequestHandler.end_headers(self)
 
     def copyfile(self, source, outputfile):
         if not self.range:
@@ -231,7 +330,8 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
 
         Both start and stop are inclusive.
         """
-        if start is not None: infile.seek(start)
+        if start is not None:
+            infile.seek(start)
         while 1:
             to_read = min(bufsize, stop + 1 - infile.tell() if stop else bufsize)
             buf = infile.read(to_read)
@@ -273,7 +373,7 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
             self.send_header("Content-type", "audio/mpegurl")
             self.send_header("Content-length", len(data))
             self.end_headers()
-            self.wfile.write(data)
+            self.wfile.write(data.encode())
             return
 
         if IMG_THUMBNAIL_SELECTOR in absolute_path and Image:
@@ -291,11 +391,13 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
 
         response_data = self.get_directory_listing()
         self.send_response(200)
-        encoding = sys.getfilesystemencoding()
-        self.send_header("Content-type", "text/html; charset=%s" % encoding)
-        self.send_header("Content-length", len(response_data))
+        self.send_header("Content-type", "text/html; charset=utf-8")
+        print(f'DBG: len(response_data)={len(response_data)}')
+        response_data_encoded = response_data.encode("utf-8")
+        print(f'DBG: len(response_data_encoded)={len(response_data_encoded)}')
+        self.send_header("Content-length", str(len(response_data_encoded)))
         self.end_headers()
-        self.wfile.write(response_data)
+        self.wfile.write(response_data_encoded)
 
     def get_directory_listing(self):
 
@@ -361,10 +463,10 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
             quoted_link = quote(linkname)
 
             _, extension = os.path.splitext(fullname)
-            icon = (is_dir and ICON_DIR) or icons_by_type.get(extension.lower(), ICON_UNKNOWN)
+            icon = (is_dir and ICON_DIR) or ICONS_BY_TYPE.get(extension.lower(), ICON_UNKNOWN)
 
             if icon:
-                displayname = "{}&nbsp;{}".format(icon, cgi.escape(displayname))
+                displayname = f"{icon}&nbsp;{html.escape(displayname)}"
 
             size_info = ""
             link_with_image_preview = ""
@@ -378,32 +480,24 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
                 if not args.suppress_size:
                     size_info = size
 
+            file_type = is_dir and 'dir' or 'file'
+
             if re.search(REGEX_IMAGE_FILE, file_entry):
-                link_with_image_preview = """
-        <a class="imglnk" title="{title}" href="{link}">
+                link_with_image_preview = f"""
+        <a class="imglnk" data-name="{file_entry}" data-type="{file_type}" title="{title}" href="{quoted_link}">
             <div class="preview">
-                <img src="{link}{selector}">
+                <img src="{quoted_link}{IMG_THUMBNAIL_SELECTOR}">
             </div>
-        </a>""".format(
-                    title=title,
-                    link=quoted_link,
-                    selector=IMG_THUMBNAIL_SELECTOR)
+        </a>"""
 
             result.append(
-"""    <li>{preview}
-        <a class="fileinfo" data-type="{ftype}" title="{title}" href="{link}">
-            <span class="fname">{name}</span>
+f"""    <li>{link_with_image_preview}
+        <a class="fileinfo" data-name="{file_entry}" data-type="{file_type}" title="{title}" href="{quoted_link}">
+            <span class="fname">{displayname}</span>
             <span class="size">{size_info}</span>
         </a>
     </li>
-""".format(
-                                     ftype=is_dir and 'dir' or 'file',
-                                     preview=link_with_image_preview,
-                                     title=title,
-                                     link=quoted_link,
-                                     name=displayname,
-                                     size_info=size_info)
-            )
+""")
 
         return '\n'.join(result)
 
@@ -433,7 +527,7 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
             else:
                 path_relative_to_webroot = fullname.replace(m3u_webroot, "")
 
-            result.append((cgi.escape(file_entry), "http://{}:{}{}".format(domain, args.port, quote(path_relative_to_webroot))))
+            result.append((html.escape(file_entry), "http://{}:{}{}".format(domain, args.port, quote(path_relative_to_webroot))))
 
         return result
 
@@ -489,7 +583,7 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
 #EXTINF:1.0,""" + """#EXTINF:1.0,""".join((k + "\n" + v + "\n" for k, v in entries))
 
 
-class ThreadedHTTPServer(SocketServer.ThreadingMixIn, HTTPServer):
+class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
     """Handle requests in a separate thread."""
 
     def __str__(self):
@@ -578,7 +672,7 @@ if __name__ == '__main__':
     print("Serving on {}".format(url))
     sys.stdout.flush()
 
-    if not args.no_browser and not platform.machine() in ('arm', 'aarch64', 'armv7l'):
-        open_url_in_browser(url)
+    # if not args.no_browser and not platform.machine() in ('arm', 'aarch64', 'armv7l'):
+    #     open_url_in_browser(url)
 
     threaded_server.serve_forever()
