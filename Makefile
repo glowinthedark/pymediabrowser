@@ -11,7 +11,10 @@ install:    # install npm dependencies for minification
 clean:      # remove generated files
 	rm -f -v mediabro.min.html js/main.min.js
 
-run:
+stop:
+	-pkill -f mediabrowser.py
+
+run: stop
 	$(PYTHON) mediabrowser.py --browser
 
 help:       # show available targets
