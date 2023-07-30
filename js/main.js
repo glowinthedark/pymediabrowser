@@ -739,11 +739,11 @@ color: rgb(255, 0, 255);
         "d663fd": "p"
     };
     // Replace font tags with cue span tags using the map
-    srt = srt.replace(/<font color="#([0-9a-fA-F]{6})">(.*?)<\/font>/g, function (match, color, text) {
-        return `<c.${colorMap[color.toLowerCase()]}>${text}</c>`;
+    srt = srt.replace(/<font color="#([0-9a-fA-F]{6})">([\s\S]*?)<\/font>/g, function (match, color, text) {
+        return `<c.${colorMap[color.toLowerCase()]}>${text.replace('\n','').trim()}</c>`;
     });
 
-    srt = srt.replaceAll('<br>', '\n')
+    srt = srt.replace(/<br\s*\/?>/g, '\n')
 
     return new Blob([srt], { type: 'text/vtt' });
 }    
@@ -763,7 +763,6 @@ function addVttSubtitleTracks(vttLinks, mediaLink) {
 }
 
 function addSRTSubtitleTracks(srtLinks, mediaLink) {
-    debugger;
     videoplayer.empty();
     var commonPrefix = getCommonPrefix(mediaLink);
     srtLinks.each(function () {
@@ -772,8 +771,6 @@ function addSRTSubtitleTracks(srtLinks, mediaLink) {
 }
 
 function fetchConvertAttachSrt2Vtt(mediaLink, srtEl, commonPrefix) {
-    // var video = document.getElementById('videoplayer');
-    debugger;
     var srtUrl = srtEl.href;
     var srtName = srtEl.dataset.name;
     fetch(srtUrl)
