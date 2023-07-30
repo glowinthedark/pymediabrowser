@@ -1,6 +1,8 @@
+<!--
 ```diff
 ! This project is unmaintained.
 ```
+-->
 > ### Superceded by 👉 [MediaBro4caddy](https://github.com/glowinthedark/mediabro4caddy)
 
 # PyMediaCenter
