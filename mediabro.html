@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- v110.73011 -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="author" content="info@xhumanoid.com">
+    <title>Media Browser</title>
+    <link rel="stylesheet" href="/css/split-pane.min.css" />
+    <script src="/js/jquery-3.6.3.min.js"></script>
+    <script src="/js/angular.min.js"></script>
+    <script src="/js/split-pane.min.js"></script>
+    <script src="/js/angular-split-pane.min.js"></script>
+    <script src="/js/marked-4.2.12.min.js"></script>
+    <script async src="/js/highlight.min-11.7.0.js"></script>
+    <script src="/js/app.js" defer></script>
+    <script src="/js/main.js" defer></script>
+    <link rel="apple-touch-icon" sizes="57x57" href="/ico/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/ico/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/ico/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/ico/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/ico/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/ico/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/ico/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/ico/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/ico/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/ico/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/ico/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/ico/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/ico/favicon-16x16.png">
+    <link rel="stylesheet" href="/css/highlight-11.7.0.min.css">
+    <link rel="manifest" href="/ico/manifest.json" crossorigin="use-credentials">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="ico/ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
+
+    <style type="text/css">
+        html,
+        body {
+            height: 100%;
+            min-height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        p {
+            padding: 0;
+            margin: 0;
+        }
+
+        .media-pane {
+            position: relative;
+        }
+
+        #playbackSpeed {
+            max-width: 30px;
+            min-width: 30px;
+            position: absolute;
+            top: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        audio {
+            min-width: 90%;
+            max-width: 90%;
+            width: 90%;
+            display: block;
+            margin: 0 40px 0 0;
+        }
+
+        video {
+            height: 100%;
+            min-height: 100%;
+            max-width: 100%;
+            display: block;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        iframe {
+            background-color: white;
+        }
+
+        #docview {
+            border-style: none;
+            margin: 0;
+            padding: 0
+        }
+
+        a:link {
+            color: #808080;
+            text-decoration: none;
+        }
+
+        /* visited link */
+
+        a:visited {
+            color: #808080;
+            text-decoration: none;
+        }
+
+        /* mouse over link */
+
+        a:hover {
+            color: #ff7d12;
+        }
+
+        /* selected link */
+
+        a:active {
+            color: #ff7d12;
+        }
+
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            list-style: none;
+            padding: 0 .1em .1em .7em;
+            margin: 0;
+        }
+
+        .spinhost {
+            position: relative;
+        }
+
+        .spinhost #spinr_content {
+            display: none;
+        }
+
+        .fileinfo {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            align-items: baseline;
+            flex-wrap: nowrap;
+            flex-direction: row;
+            -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
+            justify-content: space-between;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .size {
+            color: gray;
+            font-size: 90%;
+            font-stretch: ultra-condensed;
+            flex-shrink: 0;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .fname {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        nav {
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .inlined {
+            display: table-cell;
+            margin: 0;
+            padding: 0;
+        }
+
+        .inlined a {
+            display: inline-block;
+            width: 100%;
+        }
+
+        .btn-back {
+            background-color: white;
+            font-size: 140%;
+            width: 70%;
+            cursor: pointer;
+            float: left;
+            border-bottom: 1px solid #fafafa;
+            padding-left: 5px;
+        }
+
+        .m3u {
+            padding-right: 5px;
+            min-width: 16%;
+            float: right;
+            text-align: right;
+        }
+
+        .m3u a {
+            font-size: 10px;
+        }
+
+        .split-pane .lk-no-ovrflw {
+            background-color: white;
+            overflow: hidden !important;
+        }
+
+        .pretty-split-pane-component-inner {
+            padding: 0;
+        }
+
+        select {
+            background: transparent;
+            font-size: 16px;
+            border: 0;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            color: lightgray;
+        }
+
+        * {
+            font-family: "Droid Sans", sans-serif;
+            font-size: 12pt;
+            line-height: 160%;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* http://jsfiddle.net/xLc2Le0k/15/
+        */
+
+        a.imglnk {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .preview img {
+            width: 100%;
+            min-width: 50px;
+        }
+
+        @media (min-width: 768px) {
+            .preview img {
+                max-width: 300px;
+            }
+        }
+
+        @media only screen and (max-width: 767px) {
+            body {
+                padding: 0;
+                margin: 0;
+            }
+
+            * {
+                font-family: "Droid Sans", sans-serif;
+                font-size: 14pt;
+                line-height: 160%;
+                padding: 0;
+                margin: 0;
+            }
+
+            .preview img {
+                max-width: 400px;
+            }
+        }
+
+
+        .hidden {
+            display: none;
+        }
+
+        /* webvtt */
+        video::cue {
+            color: #ffc800;
+            border: 3px solid black;
+            text-align: center;
+        }
+
+        video::cue(b) {
+            color: rgb(51, 216, 18);
+            border: 3px solid black;
+        }
+
+        video::cue(i) {
+            color: #00bafd;
+            border: 3px solid black;
+        }
+
+        video::cue(u) {
+            text-decoration: none;
+            color: #ff00ee;
+            border: 3px solid black;
+        }
+
+        video::cue(.w) {
+            color: white;
+        }
+
+        video::cue(.b) {
+            color: aqua;
+        }
+
+        video::cue(.p) {
+            color: rgb(255, 0, 255);
+        }
+    </style>
+</head>
+
+<body data-ng-app="mediabro" ng-controller="MainCtrl">
+
+    <div class="pretty-split-pane-frame">
+
+        <div data-split-pane>
+
+            <div data-split-pane-component data-width="300px">
+                <div class="pretty-split-pane-component-inner">
+
+                    <div style="clear:both"></div>
+                    <!--                SUBST -->
+                $file_list
+                </div>
+            </div>
+
+            <div data-split-pane-divider data-width="5px"></div>
+
+            <div data-split-pane-component>
+
+                <div data-split-pane data-split-pane-properties="splitPaneProperties">
+                    <div data-split-pane-component data-height="54px">
+                        <div class="pretty-split-pane-component-inner media-pane">
+                            <audio onended="playNext();" style="display:none" id="audioplayer" autoplay controls>
+                            </audio>
+                            <video onended="playNext();" style="display:none" id="videoplayer" autoplay controls>
+                            </video>
+                        </div>
+                    </div>
+                    <div data-split-pane-divider data-height="5px"></div>
+                    <div data-split-pane-component class="lk-no-ovrflw">
+                        <iframe id="docview" width="100%" height="99%" frameBorder="0" cellspacing="0">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+	</body>
+</html>
