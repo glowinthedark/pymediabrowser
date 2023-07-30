@@ -34,8 +34,6 @@ try:
 except ImportError:
     Image = None
 
-# https://emojipedia.org/
-
 VERSION = 'v110.72913'
 
 DEFAULT_PORT = 8088
@@ -152,6 +150,7 @@ ICONS_BY_TYPE = {
     'zsh': ICON_MISC,
 }
 
+
 # bytes in a megabyte; for displaying friendly file sizes
 MBFACTOR = float(1 << 20)
 
@@ -172,22 +171,6 @@ def get_script_dir():
         # unfrozen
         dir_ = os.path.dirname(os.path.realpath(__file__))
     return dir_
-
-
-def open_url_in_browser(url):
-    # webbrowser.open() is partially broken in OSX Sierra v10.12.5 and fixed in v10.12.6
-    # (https://bugs.python.org/issue30392)
-    if sys.platform == 'darwin':
-        for name in ('chrome', 'google-chrome', 'safari'):
-            try:
-                controller = webbrowser.get(name)
-                controller.open_new_tab(url)
-                return
-            except Exception as e:
-                print(e)
-                sys.stdout.flush()
-    else:
-        webbrowser.open_new_tab(url)
 
 
 def make_thumbnail(image_path, size):
@@ -248,7 +231,7 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
 
     def __init__(self, request, client_address, server):
         self.media_root_dir = args.webroot
-        template_path = os.path.join(get_script_dir(), "mediabro.html")
+        template_path = os.path.join(get_script_dir(), "mediabro.min.html")
 
         html_content = open(template_path).read()
 
@@ -392,9 +375,7 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
         response_data = self.get_directory_listing()
         self.send_response(200)
         self.send_header("Content-type", "text/html; charset=utf-8")
-        print(f'DBG: len(response_data)={len(response_data)}')
         response_data_encoded = response_data.encode("utf-8")
-        print(f'DBG: len(response_data_encoded)={len(response_data_encoded)}')
         self.send_header("Content-length", str(len(response_data_encoded)))
         self.end_headers()
         self.wfile.write(response_data_encoded)
@@ -653,8 +634,8 @@ if __name__ == '__main__':
                         help='domain to use in M3U playlists; by default the curren IP addres is used',
                         action='store',
                         default=get_ip_address())
-    parser.add_argument('--no-browser', '-n',
-                        help="don't automatically open the system web browser",
+    parser.add_argument('--browser', '-b',
+                        help="automatically open the system web browser",
                         action='store_true',
                         default=False)
     parser.add_argument('--suppress_size', '-s',
@@ -672,7 +653,7 @@ if __name__ == '__main__':
     print("Serving on {}".format(url))
     sys.stdout.flush()
 
-    # if not args.no_browser and not platform.machine() in ('arm', 'aarch64', 'armv7l'):
-    #     open_url_in_browser(url)
+    if args.browser and not platform.machine() in ('arm', 'aarch64', 'armv7l'):
+        webbrowser.open_new_tab(url)
 
     threaded_server.serve_forever()
