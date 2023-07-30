@@ -26,6 +26,7 @@ import webbrowser
 from http.server import HTTPServer
 from http.server import SimpleHTTPRequestHandler
 from io import BytesIO
+from pathlib import Path
 from string import Template
 from urllib.parse import unquote, quote
 
@@ -33,6 +34,8 @@ try:
     from PIL import Image, ExifTags
 except ImportError:
     Image = None
+
+# https://emojipedia.org/
 
 VERSION = 'v110.72913'
 
@@ -231,7 +234,7 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
 
     def __init__(self, request, client_address, server):
         self.media_root_dir = args.webroot
-        template_path = os.path.join(get_script_dir(), "mediabro.min.html")
+        template_path = os.path.join(get_script_dir(), "mediabro.html")
 
         html_content = open(template_path).read()
 
@@ -407,44 +410,58 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
         interface the same as for send_head().
 
         """
-        try:
-            file_list = os.listdir(path)
-            if '?show=all' not in self.path:
-                file_list = [f for f in file_list if not f.startswith('.')]
-        except os.error:
+        dir_path = Path(path)
+
+        if not os.access(dir_path, os.R_OK):
             self.send_error(404, "No permission to list directory")
             return None
-
-        # sort file list with folders first
-        file_list.sort(key=lambda a: (not os.path.isdir(os.path.join(path, a)), a.lower()))
-        result = ['''
+        else:
+            if '?show=all' not in path:
+                # by default do NOT include dot files
+                file_list_iter = filter(lambda f: not f.name.startswith('.'), dir_path.iterdir())
+            else:
+                file_list_iter = dir_path.iterdir()
+            file_list: list[Path] = sorted(file_list_iter, key=lambda f: (not f.is_dir(), f.name.lower()))
+        # try:
+        #     file_list = os.listdir(path)
+        #     if '?show=all' not in self.path:
+        #         file_list = [f for f in file_list if not f.startswith('.')]
+        # except os.error:
+        #
+        #
+        # # sort file list with folders first
+        # file_list.sort(key=lambda a: (not os.path.isdir(os.path.join(path, a)), a.lower()))
+        result = [f'''
     <nav>
         <div class="inlined btn-back">
-            <a title="parent folder" href="..">{}</a>
+            <a title="parent folder" href="..">{ICON_BACK}</a>
         </div>
         <div class="inlined m3u">
-            <a target="_blank" href="{}">M3U</a>
+            <a target="_blank" href="{MEDIALIST_M3U}">M3U</a>
         </div>
     </nav>
     <div style="clear:both"></div>
-<ul>'''.format(ICON_BACK, MEDIALIST_M3U)]
+<ul>''']
 
-        for file_entry in file_list:
-            fullname = os.path.join(path, file_entry)
-            displayname = linkname = file_entry
+        entry: Path
+        for entry in file_list:
+            fullname = entry.absolute()
+            # fullname = os.path.join(path, file_entry)
+            displayname = linkname = entry.name
             # Append / for directories or @ for symbolic links
-            is_dir = os.path.isdir(fullname)
+            is_dir = entry.is_dir()
 
             if is_dir:
-                displayname = file_entry + "/"
-                linkname = file_entry + "/"
-            if os.path.islink(fullname):
-                displayname = file_entry + "@"
+                displayname = entry.name + "/"
+                linkname = entry.name + "/"
+            if entry.is_symlink():
+                displayname = entry.name + "@"
                 # Note: a link to a directory displays with @ and links with /
             quoted_link = quote(linkname)
 
-            _, extension = os.path.splitext(fullname)
-            icon = (is_dir and ICON_DIR) or ICONS_BY_TYPE.get(extension.lower(), ICON_UNKNOWN)
+            # if no extension then match name
+            extension = entry.suffix.lower()[1:] if entry.suffix else entry.name
+            icon = (is_dir and ICON_DIR) or ICONS_BY_TYPE.get(extension, ICON_UNKNOWN)
 
             if icon:
                 displayname = f"{icon}&nbsp;{html.escape(displayname)}"
@@ -454,18 +471,18 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
             title = displayname
 
             if not is_dir:
-                size = get_file_size(fullname)
+                size = pretty_size(entry.stat().st_size)
 
-                title = "{} [{}]".format(displayname, size)
+                title = f"{displayname} [{size}]"
 
                 if not args.suppress_size:
                     size_info = size
 
-            file_type = is_dir and 'dir' or 'file'
+            file_type = 'dir' if is_dir else 'file'
 
-            if re.search(REGEX_IMAGE_FILE, file_entry):
+            if re.search(REGEX_IMAGE_FILE, entry.name):
                 link_with_image_preview = f"""
-        <a class="imglnk" data-name="{file_entry}" data-type="{file_type}" title="{title}" href="{quoted_link}">
+        <a class="imglnk" data-name="{entry}" data-type="{file_type}" title="{title}" href="{quoted_link}">
             <div class="preview">
                 <img src="{quoted_link}{IMG_THUMBNAIL_SELECTOR}">
             </div>
@@ -473,7 +490,7 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
 
             result.append(
 f"""    <li>{link_with_image_preview}
-        <a class="fileinfo" data-name="{file_entry}" data-type="{file_type}" title="{title}" href="{quoted_link}">
+        <a class="fileinfo" data-name="{entry}" data-type="{file_type}" title="{title}" href="{quoted_link}">
             <span class="fname">{displayname}</span>
             <span class="size">{size_info}</span>
         </a>
