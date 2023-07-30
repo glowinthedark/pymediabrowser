@@ -1,0 +1,26 @@
+{
+  "name": "mediabrowser",
+  "version": "110.73011",
+  "description": "An HTML+JS media browser for navigating file systems that contain text files, images, audio or video files. For video/audio files associated content such as PDF, HTML, or TXT can be displayed based on file name matching rules.",
+  "main": "mediaserver.py",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/glowinthedark/pymediabrowser.git"
+  },
+  "author": "glowinthedark",
+  "license": "glowinthedark",
+  "bugs": {
+    "url": "https://github.com/glowinthedark/pymediabrowser/issues"
+  },
+  "homepage": "https://github.com/glowinthedark/pymediabrowser",
+  "scripts": {
+    "build-html": "html-minifier-terser --remove-redundant-attributes --remove-script-type-attributes --remove-style-link-type-attributes --collapse-whitespace --collapse-boolean-attributes --minify-css true --minify-js false --remove-comments mediabro.html -o mediabro.min.html",
+    "build-js": "terser js/main.js -o js/main.min.js",
+    "build": "npm run build-html && npm run build-js"
+  },
+  "devDependencies": {
+    "clean-css": "^5.3.2",
+    "html-minifier-terser": "^7.2.0",
+    "terser": "^5.19.2"
+  }
+}
