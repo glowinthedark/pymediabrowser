@@ -10,9 +10,51 @@
 # - select playback speed for video/audio
 # - http range support
 
-# Thanks to:
-# Dan Vanderkam for RangeHTTPServer - https://github.com/danvk/RangeHTTPServer
 
+# css grid layout lk https://codepen.io/ccpizz/pen/prYErG
+
+## MOUSE RESIZE: https://stackoverflow.com/questions/38289204/jquery-ui-draggable-doesnt-resize-other-divs/38553541#38553541
+## WORKING JSFIDDLE with jqueryui: https://jsfiddle.net/uvdp2oek/
+
+
+## SPLIT PANE: https://stackoverflow.com/questions/12194469/best-way-to-do-a-split-pane-in-html
+## TODO: http://layout.jquery-dev.net/demos/simple.html
+
+# FRAMES: https://www.w3schools.com/tags/tryit.asp?filename=tryhtml_frame_cols
+# http://layout.jquery-dev.com/demos.cfm
+
+# JqueryUI layout github: https://github.com/allpro/layout/
+
+# angular layouts: https://codepen.io/ccpizz/pen/RZXKxJ
+
+# VAADIN Split resizable layout: https://vaadin.com/elements/-/element/vaadin-split-layout#demos
+
+
+# Angular SPLIT: https://stackoverflow.com/questions/43264788/angular-2-material-flex-layout-split-panes
+# Angular SPLIT: https://bertrandg.github.io/angular-split/#/advanced-example
+
+# Angular-slit-pane: https://github.com/shagstrom/angular-split-pane
+#                 DEMO: http://www.dreamchain.com/static/angular-split-pane/examples/nested.html
+
+# React SPLIT: http://react-split-pane.surge.sh/
+
+# React splitter layout: https://zesik.com/react-splitter-layout/#/nested
+
+# React panel group: https://danfessler.github.io/react-panelgroup/
+
+# BOOTSTRAP resizable: https://codepen.io/barbalex/pen/ogZWNV
+
+# Jquery resizable panels: https://codepen.io/rstrahl/pen/eJZQej
+
+# =================================
+# react draggable resizable grid:
+# https://github.com/STRML/react-grid-layout
+# DEMOS: https://github.com/STRML/react-grid-layout#demos
+# Real projects using: https://strml.github.io/
+
+
+# added Range support:
+# https://github.com/danvk/RangeHTTPServer
 import argparse
 import html
 import os
@@ -113,6 +155,7 @@ ICONS_BY_TYPE = {
     'txt': ICON_TEXT,
     'vtt': ICON_TEXT,
     'cue': ICON_TEXT,
+    'license': ICON_TEXT,
 
     'bat': ICON_MISC,
     'c': ICON_MISC,
@@ -151,8 +194,10 @@ ICONS_BY_TYPE = {
     'yaml': ICON_MISC,
     'yml': ICON_MISC,
     'zsh': ICON_MISC,
+    'Makefile': ICON_MISC,
 }
 
+MIME_TYPES_FORCE_TEXT_PLAIN = ('pl', 'php', 'Makefile', 'Caddyfile', 'LICENSE')
 
 # bytes in a megabyte; for displaying friendly file sizes
 MBFACTOR = float(1 << 20)
@@ -218,6 +263,10 @@ def fix_image_orientation(image):
 
     return image
 
+def get_extension(entry):
+    return entry.suffix.lower()[1:] if entry.suffix else entry.name
+
+
 
 class MyRequestHandler(SimpleHTTPRequestHandler):
     #
@@ -234,9 +283,9 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
 
     def __init__(self, request, client_address, server):
         self.media_root_dir = args.webroot
-        template_path = os.path.join(get_script_dir(), "mediabro.html")
+        template_path = Path(get_script_dir(), "mediabro.html")
 
-        html_content = open(template_path).read()
+        html_content = template_path.read_text(encoding='utf-8')
 
         self.page_template = Template(html_content)
 
@@ -325,7 +374,6 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
                 break
             outfile.write(buf)
 
-
     def parse_byte_range(self, byte_range):
         """Returns the two numbers in 'bytes=123-456' or throws ValueError.
 
@@ -351,13 +399,14 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
         print(self.version_string())
         sys.stdout.flush()
 
-        absolute_path = os.path.join(self.media_root_dir, unquote(self.path[1:]))
+        path_normalized = Path(self.media_root_dir, unquote(self.path[1:]))
+        absolute_path = str(path_normalized.absolute())
 
         if absolute_path.endswith(MEDIALIST_M3U):
             data = self.generate_m3u(absolute_path)
             self.send_response(200)
             self.send_header("Content-type", "audio/mpegurl")
-            self.send_header("Content-length", len(data))
+            self.send_header("Content-length", str(len(data)))
             self.end_headers()
             self.wfile.write(data.encode())
             return
@@ -367,12 +416,12 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
             thumbnail_binary = make_thumbnail(real_image_path, (300, 200))
             self.send_response(200)
             self.send_header("Content-type", "image/jpeg")
-            self.send_header("Content-length", len(thumbnail_binary))
+            self.send_header("Content-length", str(len(thumbnail_binary)))
             self.end_headers()
             self.wfile.write(thumbnail_binary)
             return
 
-        if not os.path.isdir(absolute_path):
+        if not path_normalized.is_dir():
             return SimpleHTTPRequestHandler.do_GET(self)
 
         response_data = self.get_directory_listing()
@@ -422,15 +471,7 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
             else:
                 file_list_iter = dir_path.iterdir()
             file_list: list[Path] = sorted(file_list_iter, key=lambda f: (not f.is_dir(), f.name.lower()))
-        # try:
-        #     file_list = os.listdir(path)
-        #     if '?show=all' not in self.path:
-        #         file_list = [f for f in file_list if not f.startswith('.')]
-        # except os.error:
-        #
-        #
-        # # sort file list with folders first
-        # file_list.sort(key=lambda a: (not os.path.isdir(os.path.join(path, a)), a.lower()))
+
         result = [f'''
     <nav>
         <div class="inlined btn-back">
@@ -460,7 +501,7 @@ class MyRequestHandler(SimpleHTTPRequestHandler):
             quoted_link = quote(linkname)
 
             # if no extension then match name
-            extension = entry.suffix.lower()[1:] if entry.suffix else entry.name
+            extension = get_extension(entry)
             icon = (is_dir and ICON_DIR) or ICONS_BY_TYPE.get(extension, ICON_UNKNOWN)
 
             if icon:
@@ -498,6 +539,7 @@ f"""    <li>{link_with_image_preview}
 """)
 
         return '\n'.join(result)
+
 
     def __list_directory_bare(self, path):
         try:
