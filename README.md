@@ -3,8 +3,8 @@
 ! This project is unmaintained.
 ```
 -->
->  Superceded by [MediaBro4caddy](https://github.com/glowinthedark/mediabro4caddy)
-
+>  Superceded by [js-media-browser](https://github.com/glowinthedark/js-media-browser)
+> 
 # PyMediaCenter
 A local media browser app for navigating file systems that contain images, audio or video files, and displaying associated content such as PDF, HTML, or TXT. 
 
